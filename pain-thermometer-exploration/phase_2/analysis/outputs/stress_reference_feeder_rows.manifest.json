@@ -1,0 +1,16 @@
+{
+  "output": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_feeder_rows.parquet",
+  "rows": 508290,
+  "subjects": 299,
+  "datasets": [
+    {
+      "dataset_id": "stress_reference_real",
+      "rows": 251490
+    },
+    {
+      "dataset_id": "stress_reference_synthetic",
+      "rows": 256800
+    }
+  ],
+  "note": "Auxiliary stress/state rows only; not direct pain supervision."
+}

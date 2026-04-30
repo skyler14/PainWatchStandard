@@ -1,0 +1,12 @@
+__pycache__/
+.DS_Store
+*.pyc
+*.pkl
+*.sqlite
+*.db
+.conda-r/
+*.csv
+*.zip
+*.tar
+*.tar.gz
+*.gz

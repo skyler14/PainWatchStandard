@@ -1,0 +1,55 @@
+{
+  "real_rows": 251490,
+  "synthetic_rows": 256800,
+  "real_subjects": 99,
+  "synthetic_subjects": 200,
+  "real_by_source": [
+    {
+      "source_dataset": "NEURO",
+      "rows": 23746,
+      "subjects": 20,
+      "prevalence": 0.5479238608607766
+    },
+    {
+      "source_dataset": "SWELL",
+      "rows": 157625,
+      "subjects": 9,
+      "prevalence": 0.2856780333068993
+    },
+    {
+      "source_dataset": "UBFC",
+      "rows": 38569,
+      "subjects": 56,
+      "prevalence": 0.984417537400503
+    },
+    {
+      "source_dataset": "WESAD",
+      "rows": 31550,
+      "subjects": 14,
+      "prevalence": 0.3022187004754358
+    }
+  ],
+  "synthetic_prevalence": 0.4857126168224299,
+  "features": [
+    "hrrange",
+    "hrvar",
+    "hrstd",
+    "hrmin",
+    "edarange",
+    "edastd",
+    "edavar",
+    "hrkurt",
+    "edamin",
+    "hrmax"
+  ],
+  "models": [
+    {
+      "name": "hist_gradient_boosting",
+      "random_state": 42
+    },
+    {
+      "name": "random_forest",
+      "random_state": 42
+    }
+  ]
+}
