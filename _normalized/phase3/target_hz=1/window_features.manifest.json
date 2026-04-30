@@ -1,0 +1,184 @@
+{
+  "audit": {
+    "by_label_family_dataset": [
+      {
+        "activity_targets": 0,
+        "baseline_targets": 5000,
+        "dataset_id": "catsa",
+        "label_family": "baseline_context",
+        "pain_targets": 0,
+        "rows": 5000,
+        "sessions": 50,
+        "stress_targets": 5000,
+        "subjects": 50
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 15000,
+        "dataset_id": "catsa",
+        "label_family": "cognitive_load_proxy",
+        "pain_targets": 0,
+        "rows": 15000,
+        "sessions": 150,
+        "stress_targets": 15000,
+        "subjects": 50
+      },
+      {
+        "activity_targets": 10132,
+        "baseline_targets": 23454,
+        "dataset_id": "rheumapain",
+        "label_family": "direct_pain",
+        "pain_targets": 23764,
+        "rows": 23764,
+        "sessions": 83,
+        "stress_targets": 0,
+        "subjects": 42
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "painmonit",
+        "label_family": "direct_pain",
+        "pain_targets": 9156,
+        "rows": 9156,
+        "sessions": 90,
+        "stress_targets": 0,
+        "subjects": 49
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 1700,
+        "dataset_id": "physiopain_watch",
+        "label_family": "direct_pain",
+        "pain_targets": 8600,
+        "rows": 8600,
+        "sessions": 86,
+        "stress_targets": 0,
+        "subjects": 86
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 17867,
+        "dataset_id": "epm_e4",
+        "label_family": "emotion_proxy",
+        "pain_targets": 0,
+        "rows": 17867,
+        "sessions": 351,
+        "stress_targets": 0,
+        "subjects": 45
+      },
+      {
+        "activity_targets": 6300,
+        "baseline_targets": 0,
+        "dataset_id": "induced_stress_exercise",
+        "label_family": "exercise_context",
+        "pain_targets": 0,
+        "rows": 9901,
+        "sessions": 100,
+        "stress_targets": 3601,
+        "subjects": 41
+      },
+      {
+        "activity_targets": 117,
+        "baseline_targets": 500,
+        "dataset_id": "wearable_sports_health",
+        "label_family": "exercise_context",
+        "pain_targets": 0,
+        "rows": 500,
+        "sessions": 10,
+        "stress_targets": 0,
+        "subjects": 10
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 1500,
+        "dataset_id": "physiopain_eeg",
+        "label_family": "pain_context_unlabeled",
+        "pain_targets": 0,
+        "rows": 8300,
+        "sessions": 83,
+        "stress_targets": 0,
+        "subjects": 83
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "stress_reference_synthetic",
+        "label_family": "stress_proxy",
+        "pain_targets": 0,
+        "rows": 256800,
+        "sessions": 200,
+        "stress_targets": 256800,
+        "subjects": 200
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "stress_reference_real",
+        "label_family": "stress_proxy",
+        "pain_targets": 0,
+        "rows": 251490,
+        "sessions": 99,
+        "stress_targets": 251490,
+        "subjects": 99
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "merged_wearable_stress",
+        "label_family": "stress_proxy",
+        "pain_targets": 0,
+        "rows": 3300,
+        "sessions": 33,
+        "stress_targets": 3300,
+        "subjects": 15
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "wesad",
+        "label_family": "stress_proxy",
+        "pain_targets": 0,
+        "rows": 1500,
+        "sessions": 15,
+        "stress_targets": 0,
+        "subjects": 15
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "sample_27_9vuw",
+        "label_family": "unlabeled",
+        "pain_targets": 0,
+        "rows": 200,
+        "sessions": 2,
+        "stress_targets": 0,
+        "subjects": 1
+      },
+      {
+        "activity_targets": 0,
+        "baseline_targets": 0,
+        "dataset_id": "painmonit",
+        "label_family": "unlabeled",
+        "pain_targets": 0,
+        "rows": 61,
+        "sessions": 8,
+        "stress_targets": 0,
+        "subjects": 8
+      }
+    ],
+    "columns": 422,
+    "created_at": "2026-04-30T03:44:14.144505+00:00",
+    "rows": 611439
+  },
+  "config": {
+    "all_windows": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/window_features.parquet",
+    "output": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",
+    "state_atlas": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_assignments.parquet",
+    "stress_rows": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_feeder_rows.parquet"
+  },
+  "output": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",
+  "sidecars": {
+    "label_family_audit": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/label_family_audit.csv"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "baseline_rows": 65021,
+  "config": {
+    "feature_mode": "fast",
+    "input_path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",
+    "max_aux_rows": 60000,
+    "max_loso_subjects": 2,
+    "min_test_rows": 80,
+    "min_train_rows": 400,
+    "model_iterations": 60,
+    "output_dir": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/baselines",
+    "random_state": 42
+  },
+  "direct_pain_rows": 41520,
+  "outputs": {
+    "metrics": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/baselines/phase3_metrics.csv",
+    "report": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/baselines/PHASE_3_BASELINE_REPORT.md"
+  },
+  "rows": 611439,
+  "stress_rows": 535191
+}

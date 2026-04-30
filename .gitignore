@@ -1,0 +1,40 @@
+````.DS_Store
+**/.DS_Store
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+.build/
+**/.conda-r/
+
+# Raw local archives are intentionally not part of the Zerve dashboard branch.
+*.zip
+*.tar
+*.tar.gz
+
+# Keep only explicitly added dashboard exports/artifacts.
+_exports/*
+!_exports/pain_demo_postgres_phase3_all_datasets.sql.gz
+!_exports/pain_demo_postgres_phase3_all_datasets.sql.gz.manifest.json
+!_exports/pain_demo_postgres_phase3_small_sample.sql.gz
+!_exports/pain_demo_postgres_phase3_small_sample.sql.gz.manifest.json
+
+# Keep only Phase 3 serving/training outputs needed by the dashboard flow.
+_normalized/*
+!_normalized/phase3/
+_normalized/phase3/*
+!_normalized/phase3/target_hz=1/
+_normalized/phase3/target_hz=1/*
+!_normalized/phase3/target_hz=1/window_features.parquet
+!_normalized/phase3/target_hz=1/window_features.manifest.json
+!_normalized/phase3/target_hz=1/label_family_audit.csv
+!_normalized/phase3/target_hz=1/baselines/
+_normalized/phase3/target_hz=1/baselines/*
+!_normalized/phase3/target_hz=1/baselines/manifest.json
+!_normalized/phase3/target_hz=1/baselines/phase3_metrics.csv
+!_normalized/phase3/target_hz=1/baselines/PHASE_3_BASELINE_REPORT.md
+.DS_Store

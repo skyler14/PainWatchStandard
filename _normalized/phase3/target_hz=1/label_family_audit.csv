@@ -1,0 +1,16 @@
+label_family,dataset_id,rows,subjects,sessions,pain_targets,stress_targets,activity_targets,baseline_targets
+baseline_context,catsa,5000,50,50,0,5000,0,5000
+cognitive_load_proxy,catsa,15000,50,150,0,15000,0,15000
+direct_pain,rheumapain,23764,42,83,23764,0,10132,23454
+direct_pain,painmonit,9156,49,90,9156,0,0,0
+direct_pain,physiopain_watch,8600,86,86,8600,0,0,1700
+emotion_proxy,epm_e4,17867,45,351,0,0,0,17867
+exercise_context,induced_stress_exercise,9901,41,100,0,3601,6300,0
+exercise_context,wearable_sports_health,500,10,10,0,0,117,500
+pain_context_unlabeled,physiopain_eeg,8300,83,83,0,0,0,1500
+stress_proxy,stress_reference_synthetic,256800,200,200,0,256800,0,0
+stress_proxy,stress_reference_real,251490,99,99,0,251490,0,0
+stress_proxy,merged_wearable_stress,3300,15,33,0,3300,0,0
+stress_proxy,wesad,1500,15,15,0,0,0,0
+unlabeled,sample_27_9vuw,200,1,2,0,0,0,0
+unlabeled,painmonit,61,8,8,0,0,0,0

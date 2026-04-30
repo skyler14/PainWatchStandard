@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>PainThermometer</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>dev.startai.PainThermometer.watchkitapp</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>WKApplication</key>
+	<true/>
+	<key>WKWatchOnly</key>
+	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>PainThermometer reads workout and heart-rate data during personal debug recording sessions.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>PainThermometer writes a workout session so recording can continue while the watch is active.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>PainThermometer records watch motion during personal debug recording sessions.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>workout-processing</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,232 @@
+{
+  "compressed_bytes": 273385816,
+  "created_at": "2026-04-30T01:51:17.921866+00:00",
+  "output": "../_exports/pain_demo_postgres_phase3_all_datasets.sql.gz",
+  "schema_name": "pain_demo_phase3",
+  "tables": [
+    {
+      "columns": 21,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/rheumapain/frequency_hz=64/measurement_stream.parquet",
+      "row_limit": null,
+      "rows": 1387231,
+      "source_format": "parquet",
+      "table_name": "rheumapain_measurement_stream"
+    },
+    {
+      "columns": 13,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/rheumapain/frequency_hz=64/labels.parquet",
+      "row_limit": null,
+      "rows": 42,
+      "source_format": "parquet",
+      "table_name": "rheumapain_labels"
+    },
+    {
+      "columns": 5,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/rheumapain/frequency_hz=64/subjects.parquet",
+      "row_limit": null,
+      "rows": 42,
+      "source_format": "parquet",
+      "table_name": "rheumapain_subjects"
+    },
+    {
+      "columns": 26,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/painmonit/clinical/measurement_stream.parquet",
+      "row_limit": null,
+      "rows": 2969065,
+      "source_format": "parquet",
+      "table_name": "painmonit_clinical_measurement_stream"
+    },
+    {
+      "columns": 18,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/painmonit/clinical/labels.parquet",
+      "row_limit": null,
+      "rows": 90,
+      "source_format": "parquet",
+      "table_name": "painmonit_labels"
+    },
+    {
+      "columns": 9,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/painmonit/clinical/subjects.parquet",
+      "row_limit": null,
+      "rows": 49,
+      "source_format": "parquet",
+      "table_name": "painmonit_subjects"
+    },
+    {
+      "columns": 201,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/window_features/target_hz=1/window_features.parquet",
+      "row_limit": null,
+      "rows": 32981,
+      "source_format": "parquet",
+      "table_name": "pain_windows_1hz_30s"
+    },
+    {
+      "columns": 383,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/window_features.parquet",
+      "row_limit": null,
+      "rows": 103149,
+      "source_format": "parquet",
+      "table_name": "pain_windows_all_datasets_1hz_30s"
+    },
+    {
+      "columns": 19,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_assignments.parquet",
+      "row_limit": null,
+      "rows": 103149,
+      "source_format": "parquet",
+      "table_name": "baseline_state_assignments"
+    },
+    {
+      "columns": 8,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_cluster_summary.csv",
+      "row_limit": null,
+      "rows": 42,
+      "source_format": "csv",
+      "table_name": "baseline_state_cluster_summary"
+    },
+    {
+      "columns": 3,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_bins_by_dataset.csv",
+      "row_limit": null,
+      "rows": 29,
+      "source_format": "csv",
+      "table_name": "baseline_state_bins_by_dataset"
+    },
+    {
+      "columns": 40,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_feeder_rows.parquet",
+      "row_limit": null,
+      "rows": 508290,
+      "source_format": "parquet",
+      "table_name": "phase2_stress_reference_auxiliary_windows"
+    },
+    {
+      "columns": 15,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_metrics.csv",
+      "row_limit": null,
+      "rows": 28,
+      "source_format": "csv",
+      "table_name": "phase2_stress_reference_metrics"
+    },
+    {
+      "columns": 12,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_lifts.csv",
+      "row_limit": null,
+      "rows": 8,
+      "source_format": "csv",
+      "table_name": "phase2_stress_reference_lifts"
+    },
+    {
+      "columns": 4,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_r_audit.csv",
+      "row_limit": null,
+      "rows": 2,
+      "source_format": "csv",
+      "table_name": "phase2_stress_reference_r_audit"
+    },
+    {
+      "columns": 12,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_r_metrics.csv",
+      "row_limit": null,
+      "rows": 28,
+      "source_format": "csv",
+      "table_name": "phase2_stress_reference_r_metrics"
+    },
+    {
+      "columns": 7,
+      "path": "/Users/skyler/Downloads/pain datasets/pain-thermometer-exploration/phase_2/analysis/outputs/stress_reference_r_lifts.csv",
+      "row_limit": null,
+      "rows": 8,
+      "source_format": "csv",
+      "table_name": "phase2_stress_reference_r_lifts"
+    },
+    {
+      "columns": 422,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",
+      "row_limit": null,
+      "rows": 611439,
+      "source_format": "parquet",
+      "table_name": "phase3_windows_1hz_30s"
+    },
+    {
+      "columns": 9,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/label_family_audit.csv",
+      "row_limit": null,
+      "rows": 15,
+      "source_format": "csv",
+      "table_name": "phase3_label_family_audit"
+    },
+    {
+      "columns": 23,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/baselines/phase3_metrics.csv",
+      "row_limit": null,
+      "rows": 84,
+      "source_format": "csv",
+      "table_name": "phase3_multitask_metrics"
+    },
+    {
+      "columns": 16,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/full_1hz_30s/reconstruction_metrics.csv",
+      "row_limit": null,
+      "rows": 9,
+      "source_format": "csv",
+      "table_name": "ssl_direct_reconstruction_metrics"
+    },
+    {
+      "columns": 16,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/full_1hz_30s/next_window_metrics.csv",
+      "row_limit": null,
+      "rows": 7,
+      "source_format": "csv",
+      "table_name": "ssl_direct_next_window_metrics"
+    },
+    {
+      "columns": 6,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/full_1hz_30s/sensor_interconnection.csv",
+      "row_limit": null,
+      "rows": 62,
+      "source_format": "csv",
+      "table_name": "ssl_direct_sensor_interconnection"
+    },
+    {
+      "columns": 48,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/full_1hz_30s/contrastive_embeddings.parquet",
+      "row_limit": null,
+      "rows": 32981,
+      "source_format": "parquet",
+      "table_name": "ssl_direct_contrastive_embeddings"
+    },
+    {
+      "columns": 17,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/all_datasets_1hz_30s/reconstruction_metrics.csv",
+      "row_limit": null,
+      "rows": 26,
+      "source_format": "csv",
+      "table_name": "ssl_all_reconstruction_metrics"
+    },
+    {
+      "columns": 17,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/all_datasets_1hz_30s/next_window_metrics.csv",
+      "row_limit": null,
+      "rows": 16,
+      "source_format": "csv",
+      "table_name": "ssl_all_next_window_metrics"
+    },
+    {
+      "columns": 6,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/all_datasets_1hz_30s/sensor_interconnection.csv",
+      "row_limit": null,
+      "rows": 204,
+      "source_format": "csv",
+      "table_name": "ssl_all_sensor_interconnection"
+    },
+    {
+      "columns": 56,
+      "path": "/Users/skyler/Downloads/pain datasets/_normalized/self_supervised/all_datasets_1hz_30s/contrastive_embeddings.parquet",
+      "row_limit": null,
+      "rows": 60000,
+      "source_format": "parquet",
+      "table_name": "ssl_all_contrastive_embeddings"
+    }
+  ]
+}
