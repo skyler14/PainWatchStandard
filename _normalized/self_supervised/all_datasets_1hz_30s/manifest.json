@@ -1,0 +1,313 @@
+{
+  "audit": {
+    "by_dataset": [
+      {
+        "dataset_id": "catsa",
+        "rows": 20000,
+        "sessions": 200,
+        "subjects": 50,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "epm_e4",
+        "rows": 17867,
+        "sessions": 351,
+        "subjects": 45,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "induced_stress_exercise",
+        "rows": 9901,
+        "sessions": 100,
+        "subjects": 41,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "merged_wearable_stress",
+        "rows": 3300,
+        "sessions": 33,
+        "subjects": 15,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "painmonit",
+        "rows": 9217,
+        "sessions": 90,
+        "subjects": 49,
+        "target_available": 9156
+      },
+      {
+        "dataset_id": "physiopain_eeg",
+        "rows": 8300,
+        "sessions": 83,
+        "subjects": 83,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "physiopain_watch",
+        "rows": 8600,
+        "sessions": 86,
+        "subjects": 86,
+        "target_available": 8600
+      },
+      {
+        "dataset_id": "rheumapain",
+        "rows": 23764,
+        "sessions": 83,
+        "subjects": 42,
+        "target_available": 23764
+      },
+      {
+        "dataset_id": "sample_27_9vuw",
+        "rows": 200,
+        "sessions": 2,
+        "subjects": 1,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "wearable_sports_health",
+        "rows": 500,
+        "sessions": 10,
+        "subjects": 10,
+        "target_available": 0
+      },
+      {
+        "dataset_id": "wesad",
+        "rows": 1500,
+        "sessions": 15,
+        "subjects": 15,
+        "target_available": 0
+      }
+    ],
+    "categorical_cardinality": {
+      "condition": 31,
+      "dataset_id": 11,
+      "device": 9,
+      "diagnosis": 9,
+      "pain_scale_type": 2,
+      "record_type": 10,
+      "sex": 2
+    },
+    "columns": 385,
+    "label_regimes": [
+      {
+        "dataset_id": "catsa",
+        "rows": 20000,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "epm_e4",
+        "rows": 17867,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "induced_stress_exercise",
+        "rows": 9901,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "merged_wearable_stress",
+        "rows": 3300,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "painmonit",
+        "rows": 61,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "painmonit",
+        "rows": 9156,
+        "target_granularity": "sparse_sample"
+      },
+      {
+        "dataset_id": "physiopain_eeg",
+        "rows": 8300,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "physiopain_watch",
+        "rows": 8600,
+        "target_granularity": "archive_window_direct"
+      },
+      {
+        "dataset_id": "rheumapain",
+        "rows": 23764,
+        "target_granularity": "session_weak"
+      },
+      {
+        "dataset_id": "sample_27_9vuw",
+        "rows": 200,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "wearable_sports_health",
+        "rows": 500,
+        "target_granularity": "none"
+      },
+      {
+        "dataset_id": "wesad",
+        "rows": 1500,
+        "target_granularity": "none"
+      }
+    ],
+    "metadata_policy": {
+      "excluded_from_self_supervised_features": [
+        "no_pain_threshold",
+        "session_id",
+        "severe_pain_threshold",
+        "subject_id",
+        "target_available",
+        "target_confidence",
+        "target_granularity",
+        "target_pain_class_3",
+        "target_pain_count",
+        "target_pain_coverage",
+        "target_pain_max",
+        "target_pain_min",
+        "target_pain_nrs_0_10",
+        "target_scale"
+      ],
+      "included_by_default": [
+        "activity_status",
+        "age",
+        "aux_state_label",
+        "baseline_available",
+        "condition",
+        "dataset_id",
+        "device",
+        "diagnosis",
+        "pain_scale_type",
+        "pain_type",
+        "proxy_label",
+        "record_type",
+        "sex",
+        "source_archive",
+        "source_member",
+        "source_modality",
+        "source_table",
+        "target_hz",
+        "window_sampling",
+        "window_seconds"
+      ],
+      "note": "subject_id and session_id are retained in outputs for grouping/audit but excluded as model features."
+    },
+    "rows": 103149,
+    "weight_summary": [
+      {
+        "dataset_id": "catsa",
+        "rows": 20000,
+        "sessions": 200,
+        "subjects": 50,
+        "weight_mean": 0.46885909090909084,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "epm_e4",
+        "rows": 17867,
+        "sessions": 351,
+        "subjects": 45,
+        "weight_mean": 0.5248324742923723,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "induced_stress_exercise",
+        "rows": 9901,
+        "sessions": 100,
+        "subjects": 41,
+        "weight_mean": 0.9470944165419469,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "merged_wearable_stress",
+        "rows": 3300,
+        "sessions": 33,
+        "subjects": 15,
+        "weight_mean": 2.8415702479338845,
+        "weight_sum": 9377.181818181818
+      },
+      {
+        "dataset_id": "painmonit",
+        "rows": 9217,
+        "sessions": 90,
+        "subjects": 49,
+        "weight_mean": 1.0173789539092781,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "physiopain_eeg",
+        "rows": 8300,
+        "sessions": 83,
+        "subjects": 83,
+        "weight_mean": 1.1297809419496165,
+        "weight_sum": 9377.181818181818
+      },
+      {
+        "dataset_id": "physiopain_watch",
+        "rows": 8600,
+        "sessions": 86,
+        "subjects": 86,
+        "weight_mean": 1.0903699788583507,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "rheumapain",
+        "rows": 23764,
+        "sessions": 83,
+        "subjects": 42,
+        "weight_mean": 0.3945961041147036,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "sample_27_9vuw",
+        "rows": 200,
+        "sessions": 2,
+        "subjects": 1,
+        "weight_mean": 46.88590909090908,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "wearable_sports_health",
+        "rows": 500,
+        "sessions": 10,
+        "subjects": 10,
+        "weight_mean": 18.75436363636363,
+        "weight_sum": 9377.181818181816
+      },
+      {
+        "dataset_id": "wesad",
+        "rows": 1500,
+        "sessions": 15,
+        "subjects": 15,
+        "weight_mean": 6.2514545454545445,
+        "weight_sum": 9377.181818181816
+      }
+    ]
+  },
+  "config": {
+    "balance_mode": "dataset_session",
+    "contrastive_components": 40,
+    "contrastive_sample": 60000,
+    "input_path": "_normalized/window_features_all/target_hz=1/window_features.parquet",
+    "max_model_rows": 80000,
+    "metadata": "basic",
+    "min_rows": 500,
+    "model_iterations": 120,
+    "next_horizon_seconds": 1.0,
+    "noise_scale": 0.025,
+    "output_dir": "_normalized/self_supervised/all_datasets_1hz_30s",
+    "random_state": 42,
+    "sensor_dropout_probability": 0.45
+  },
+  "outputs": {
+    "contrastive_embeddings": "_normalized/self_supervised/all_datasets_1hz_30s/contrastive_embeddings.parquet",
+    "contrastive_metrics": "_normalized/self_supervised/all_datasets_1hz_30s/contrastive_metrics.json",
+    "metadata_label_audit": "_normalized/self_supervised/all_datasets_1hz_30s/metadata_label_audit.json",
+    "next_window_metrics": "_normalized/self_supervised/all_datasets_1hz_30s/next_window_metrics.csv",
+    "next_window_predictions": "_normalized/self_supervised/all_datasets_1hz_30s/next_window_predictions.parquet",
+    "reconstruction_metrics": "_normalized/self_supervised/all_datasets_1hz_30s/reconstruction_metrics.csv",
+    "reconstruction_predictions": "_normalized/self_supervised/all_datasets_1hz_30s/reconstruction_predictions.parquet",
+    "report": "_normalized/self_supervised/all_datasets_1hz_30s/SELF_SUPERVISED_EXPLORATION_REPORT.md",
+    "sensor_interconnection": "_normalized/self_supervised/all_datasets_1hz_30s/sensor_interconnection.csv"
+  }
+}

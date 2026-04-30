@@ -1,0 +1,309 @@
+{
+  "created_at": "2026-04-29T11:59:43.893763+00:00",
+  "dataset_id": "rheumapain",
+  "frequency_hz": 64,
+  "outputs": {
+    "labels": "_normalized/rheumapain/frequency_hz=64/labels.parquet",
+    "measurement_stream": "_normalized/rheumapain/frequency_hz=64/measurement_stream.parquet",
+    "subjects": "_normalized/rheumapain/frequency_hz=64/subjects.parquet"
+  },
+  "rows": 1387231,
+  "schema_note": "Wide, per-sample physiology frame for window feature extraction.",
+  "source_archive": "RheumaPain Dataset.zip",
+  "source_members": [
+    {
+      "compressed_bytes": 688136,
+      "crc32": "f5f8c634",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s001.csv",
+      "uncompressed_bytes": 4284863
+    },
+    {
+      "compressed_bytes": 698917,
+      "crc32": "4cf7c306",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s002.csv",
+      "uncompressed_bytes": 3640370
+    },
+    {
+      "compressed_bytes": 1152294,
+      "crc32": "10304aaf",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s003.csv",
+      "uncompressed_bytes": 5089714
+    },
+    {
+      "compressed_bytes": 537309,
+      "crc32": "a5aaff99",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s004.csv",
+      "uncompressed_bytes": 2540715
+    },
+    {
+      "compressed_bytes": 517150,
+      "crc32": "81cc1a42",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s005.csv",
+      "uncompressed_bytes": 2676316
+    },
+    {
+      "compressed_bytes": 725339,
+      "crc32": "b78ba101",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s006.csv",
+      "uncompressed_bytes": 3360980
+    },
+    {
+      "compressed_bytes": 1152830,
+      "crc32": "76b15aee",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s007.csv",
+      "uncompressed_bytes": 4684761
+    },
+    {
+      "compressed_bytes": 1000980,
+      "crc32": "3288d590",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s008.csv",
+      "uncompressed_bytes": 4216334
+    },
+    {
+      "compressed_bytes": 826692,
+      "crc32": "1c60788a",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s009.csv",
+      "uncompressed_bytes": 3866904
+    },
+    {
+      "compressed_bytes": 999378,
+      "crc32": "57719c55",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s010.csv",
+      "uncompressed_bytes": 4450164
+    },
+    {
+      "compressed_bytes": 720815,
+      "crc32": "217694d4",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s011.csv",
+      "uncompressed_bytes": 3452397
+    },
+    {
+      "compressed_bytes": 677840,
+      "crc32": "66e021ab",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s012.csv",
+      "uncompressed_bytes": 3287321
+    },
+    {
+      "compressed_bytes": 755773,
+      "crc32": "1843791a",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s013.csv",
+      "uncompressed_bytes": 3606898
+    },
+    {
+      "compressed_bytes": 392198,
+      "crc32": "e28db3bb",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s014.csv",
+      "uncompressed_bytes": 1637929
+    },
+    {
+      "compressed_bytes": 1014598,
+      "crc32": "06f94283",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s015.csv",
+      "uncompressed_bytes": 4385369
+    },
+    {
+      "compressed_bytes": 560030,
+      "crc32": "d639249c",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s016.csv",
+      "uncompressed_bytes": 2853797
+    },
+    {
+      "compressed_bytes": 875336,
+      "crc32": "037de739",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s017.csv",
+      "uncompressed_bytes": 3654933
+    },
+    {
+      "compressed_bytes": 573023,
+      "crc32": "85c014ab",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s018.csv",
+      "uncompressed_bytes": 2899114
+    },
+    {
+      "compressed_bytes": 505042,
+      "crc32": "f29c2cf4",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s019.csv",
+      "uncompressed_bytes": 2225877
+    },
+    {
+      "compressed_bytes": 431833,
+      "crc32": "578628de",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s020.csv",
+      "uncompressed_bytes": 1831117
+    },
+    {
+      "compressed_bytes": 1328908,
+      "crc32": "ee37c085",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s021.csv",
+      "uncompressed_bytes": 5501502
+    },
+    {
+      "compressed_bytes": 824480,
+      "crc32": "ad616374",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s022.csv",
+      "uncompressed_bytes": 3544145
+    },
+    {
+      "compressed_bytes": 431255,
+      "crc32": "05e4d183",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s023.csv",
+      "uncompressed_bytes": 2025369
+    },
+    {
+      "compressed_bytes": 431250,
+      "crc32": "5be06013",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s024.csv",
+      "uncompressed_bytes": 2025369
+    },
+    {
+      "compressed_bytes": 431254,
+      "crc32": "8b67850e",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s025.csv",
+      "uncompressed_bytes": 2025369
+    },
+    {
+      "compressed_bytes": 733003,
+      "crc32": "3fc0cfca",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s026.csv",
+      "uncompressed_bytes": 3376544
+    },
+    {
+      "compressed_bytes": 755322,
+      "crc32": "10fcad48",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s027.csv",
+      "uncompressed_bytes": 3460958
+    },
+    {
+      "compressed_bytes": 1124293,
+      "crc32": "4f266041",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s028.csv",
+      "uncompressed_bytes": 4880967
+    },
+    {
+      "compressed_bytes": 1084618,
+      "crc32": "112759e3",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s029.csv",
+      "uncompressed_bytes": 4491422
+    },
+    {
+      "compressed_bytes": 911895,
+      "crc32": "20b69a47",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s030.csv",
+      "uncompressed_bytes": 4000958
+    },
+    {
+      "compressed_bytes": 661398,
+      "crc32": "20bcb7c9",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s031.csv",
+      "uncompressed_bytes": 3022586
+    },
+    {
+      "compressed_bytes": 1457178,
+      "crc32": "cacf9764",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s032.csv",
+      "uncompressed_bytes": 6122295
+    },
+    {
+      "compressed_bytes": 688158,
+      "crc32": "5891d943",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s033.csv",
+      "uncompressed_bytes": 3060849
+    },
+    {
+      "compressed_bytes": 721115,
+      "crc32": "067cf830",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s034.csv",
+      "uncompressed_bytes": 2903741
+    },
+    {
+      "compressed_bytes": 580740,
+      "crc32": "3f9277fc",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s035.csv",
+      "uncompressed_bytes": 2365794
+    },
+    {
+      "compressed_bytes": 462877,
+      "crc32": "281ecf44",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s036.csv",
+      "uncompressed_bytes": 2110712
+    },
+    {
+      "compressed_bytes": 414725,
+      "crc32": "12eaae99",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s037.csv",
+      "uncompressed_bytes": 1688323
+    },
+    {
+      "compressed_bytes": 359332,
+      "crc32": "2134a4e2",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s038.csv",
+      "uncompressed_bytes": 1483418
+    },
+    {
+      "compressed_bytes": 437748,
+      "crc32": "330b85cc",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s039.csv",
+      "uncompressed_bytes": 1910007
+    },
+    {
+      "compressed_bytes": 896990,
+      "crc32": "3924870b",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s040.csv",
+      "uncompressed_bytes": 4585842
+    },
+    {
+      "compressed_bytes": 823693,
+      "crc32": "a9afc755",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s041.csv",
+      "uncompressed_bytes": 3476529
+    },
+    {
+      "compressed_bytes": 603586,
+      "crc32": "91f41f05",
+      "source_archive": "RheumaPain Dataset.zip",
+      "source_member": "RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/64Hz/s042.csv",
+      "uncompressed_bytes": 2611960
+    }
+  ]
+}

@@ -1,0 +1,735 @@
+{
+  "created_at": "2026-04-29T12:05:57.990953+00:00",
+  "dataset_id": "painmonit",
+  "nested_archive": "PMCD.zip",
+  "outputs": {
+    "labels": "_normalized/painmonit/clinical/labels.parquet",
+    "measurement_stream": "_normalized/painmonit/clinical/measurement_stream.parquet",
+    "subjects": "_normalized/painmonit/clinical/subjects.parquet"
+  },
+  "rows": 2969065,
+  "schema_note": "Wide, per-sample clinical PainMonit frame with direct NRS pain rates and categorical labels.",
+  "source_archive": "PainMonit.zip",
+  "source_members": [
+    {
+      "compressed_bytes": 935088,
+      "crc32": "b5cb685a",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P01_1/P01_1.csv",
+      "uncompressed_bytes": 3550986
+    },
+    {
+      "compressed_bytes": 879734,
+      "crc32": "254b5ec7",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P01_2/P01_2.csv",
+      "uncompressed_bytes": 3369665
+    },
+    {
+      "compressed_bytes": 1081652,
+      "crc32": "eb014498",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P02_1/P02_1.csv",
+      "uncompressed_bytes": 3891940
+    },
+    {
+      "compressed_bytes": 725598,
+      "crc32": "3ab618f4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P02_2/P02_2.csv",
+      "uncompressed_bytes": 2624091
+    },
+    {
+      "compressed_bytes": 868150,
+      "crc32": "ef59ebfd",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P03_1/P03_1.csv",
+      "uncompressed_bytes": 3164818
+    },
+    {
+      "compressed_bytes": 734607,
+      "crc32": "77532114",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P03_2/P03_2.csv",
+      "uncompressed_bytes": 2709712
+    },
+    {
+      "compressed_bytes": 980889,
+      "crc32": "1c1e4388",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P04_1/P04_1.csv",
+      "uncompressed_bytes": 3625239
+    },
+    {
+      "compressed_bytes": 611473,
+      "crc32": "d12542d2",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P04_2/P04_2.csv",
+      "uncompressed_bytes": 2263778
+    },
+    {
+      "compressed_bytes": 989606,
+      "crc32": "ac5e6a90",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P05_1/P05_1.csv",
+      "uncompressed_bytes": 3655064
+    },
+    {
+      "compressed_bytes": 912254,
+      "crc32": "36bca80a",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P05_2/P05_2.csv",
+      "uncompressed_bytes": 3349432
+    },
+    {
+      "compressed_bytes": 922091,
+      "crc32": "4c22d44c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P06_1/P06_1.csv",
+      "uncompressed_bytes": 3431224
+    },
+    {
+      "compressed_bytes": 686947,
+      "crc32": "b480275a",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P06_2/P06_2.csv",
+      "uncompressed_bytes": 2526461
+    },
+    {
+      "compressed_bytes": 752462,
+      "crc32": "5d6a2363",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P07_1/P07_1.csv",
+      "uncompressed_bytes": 2804219
+    },
+    {
+      "compressed_bytes": 821987,
+      "crc32": "b7d11e6e",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P07_2/P07_2.csv",
+      "uncompressed_bytes": 3073846
+    },
+    {
+      "compressed_bytes": 1068022,
+      "crc32": "ec219721",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P08_1/P08_1.csv",
+      "uncompressed_bytes": 4023326
+    },
+    {
+      "compressed_bytes": 697035,
+      "crc32": "2a77b4bc",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P08_2/P08_2.csv",
+      "uncompressed_bytes": 2685725
+    },
+    {
+      "compressed_bytes": 791865,
+      "crc32": "3948c840",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P09_1/P09_1.csv",
+      "uncompressed_bytes": 2871149
+    },
+    {
+      "compressed_bytes": 700825,
+      "crc32": "4d629d03",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P09_2/P09_2.csv",
+      "uncompressed_bytes": 2551136
+    },
+    {
+      "compressed_bytes": 995923,
+      "crc32": "e3c3ff27",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P10_1/P10_1.csv",
+      "uncompressed_bytes": 3653501
+    },
+    {
+      "compressed_bytes": 581650,
+      "crc32": "3a96f783",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P10_2/P10_2.csv",
+      "uncompressed_bytes": 2104255
+    },
+    {
+      "compressed_bytes": 964460,
+      "crc32": "9d3a87f8",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P11_1/P11_1.csv",
+      "uncompressed_bytes": 3497924
+    },
+    {
+      "compressed_bytes": 768036,
+      "crc32": "7251ed6b",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P12_1/P12_1.csv",
+      "uncompressed_bytes": 2869212
+    },
+    {
+      "compressed_bytes": 567626,
+      "crc32": "2f0707d4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P12_2/P12_2.csv",
+      "uncompressed_bytes": 2109451
+    },
+    {
+      "compressed_bytes": 778910,
+      "crc32": "ac8f95c5",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P13_1/P13_1.csv",
+      "uncompressed_bytes": 2900961
+    },
+    {
+      "compressed_bytes": 456963,
+      "crc32": "da818b02",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P13_2/P13_2.csv",
+      "uncompressed_bytes": 1685216
+    },
+    {
+      "compressed_bytes": 832903,
+      "crc32": "19757194",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P14_1/P14_1.csv",
+      "uncompressed_bytes": 3011017
+    },
+    {
+      "compressed_bytes": 513645,
+      "crc32": "78a2df0b",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P14_2/P14_2.csv",
+      "uncompressed_bytes": 1907844
+    },
+    {
+      "compressed_bytes": 870102,
+      "crc32": "647b4e3d",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P15_1/P15_1.csv",
+      "uncompressed_bytes": 3373583
+    },
+    {
+      "compressed_bytes": 830249,
+      "crc32": "5385b8b8",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P16_1/P16_1.csv",
+      "uncompressed_bytes": 3089587
+    },
+    {
+      "compressed_bytes": 654405,
+      "crc32": "24c8dea0",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P16_2/P16_2.csv",
+      "uncompressed_bytes": 2389409
+    },
+    {
+      "compressed_bytes": 653451,
+      "crc32": "38e7375c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P17_1/P17_1.csv",
+      "uncompressed_bytes": 2452874
+    },
+    {
+      "compressed_bytes": 561068,
+      "crc32": "753f98f4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P17_2/P17_2.csv",
+      "uncompressed_bytes": 2090189
+    },
+    {
+      "compressed_bytes": 647457,
+      "crc32": "e3991609",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P18_1/P18_1.csv",
+      "uncompressed_bytes": 2374656
+    },
+    {
+      "compressed_bytes": 559220,
+      "crc32": "b6da760f",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P18_2/P18_2.csv",
+      "uncompressed_bytes": 2043625
+    },
+    {
+      "compressed_bytes": 723884,
+      "crc32": "daf3e579",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P19_1/P19_1.csv",
+      "uncompressed_bytes": 2765479
+    },
+    {
+      "compressed_bytes": 583738,
+      "crc32": "4624202d",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P19_2/P19_2.csv",
+      "uncompressed_bytes": 2226381
+    },
+    {
+      "compressed_bytes": 761363,
+      "crc32": "a59fe36c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P20_1/P20_1.csv",
+      "uncompressed_bytes": 2880881
+    },
+    {
+      "compressed_bytes": 393231,
+      "crc32": "a7d9672e",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P20_2/P20_2.csv",
+      "uncompressed_bytes": 1472267
+    },
+    {
+      "compressed_bytes": 699499,
+      "crc32": "37eccab6",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P21_1/P21_1.csv",
+      "uncompressed_bytes": 2735360
+    },
+    {
+      "compressed_bytes": 450298,
+      "crc32": "b386b835",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P21_2/P21_2.csv",
+      "uncompressed_bytes": 1712746
+    },
+    {
+      "compressed_bytes": 628660,
+      "crc32": "0d2ede07",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P22_1/P22_1.csv",
+      "uncompressed_bytes": 2535041
+    },
+    {
+      "compressed_bytes": 363068,
+      "crc32": "f2b6fde3",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P22_2/P22_2.csv",
+      "uncompressed_bytes": 1434729
+    },
+    {
+      "compressed_bytes": 706245,
+      "crc32": "e61129f6",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P23_1/P23_1.csv",
+      "uncompressed_bytes": 2754108
+    },
+    {
+      "compressed_bytes": 448953,
+      "crc32": "f5be40b2",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P23_2/P23_2.csv",
+      "uncompressed_bytes": 1686229
+    },
+    {
+      "compressed_bytes": 757792,
+      "crc32": "4fca781a",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P24_1/P24_1.csv",
+      "uncompressed_bytes": 2838565
+    },
+    {
+      "compressed_bytes": 700352,
+      "crc32": "0f44cfbe",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P24_2/P24_2.csv",
+      "uncompressed_bytes": 2605277
+    },
+    {
+      "compressed_bytes": 934925,
+      "crc32": "9b90eff4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P25_1/P25_1.csv",
+      "uncompressed_bytes": 3506237
+    },
+    {
+      "compressed_bytes": 627786,
+      "crc32": "eea4113d",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P25_2/P25_2.csv",
+      "uncompressed_bytes": 2335601
+    },
+    {
+      "compressed_bytes": 792876,
+      "crc32": "0fb0db6d",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P26_1/P26_1.csv",
+      "uncompressed_bytes": 2888534
+    },
+    {
+      "compressed_bytes": 664129,
+      "crc32": "323e4419",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P26_2/P26_2.csv",
+      "uncompressed_bytes": 2414645
+    },
+    {
+      "compressed_bytes": 850271,
+      "crc32": "6b7ab1a4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P27_1/P27_1.csv",
+      "uncompressed_bytes": 3077918
+    },
+    {
+      "compressed_bytes": 759442,
+      "crc32": "3cae03d7",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P27_2/P27_2.csv",
+      "uncompressed_bytes": 2806198
+    },
+    {
+      "compressed_bytes": 716574,
+      "crc32": "8839bd4c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P28_1/P28_1.csv",
+      "uncompressed_bytes": 2644790
+    },
+    {
+      "compressed_bytes": 771389,
+      "crc32": "0c080745",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P28_2/P28_2.csv",
+      "uncompressed_bytes": 2843239
+    },
+    {
+      "compressed_bytes": 630652,
+      "crc32": "0331740b",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P29_1/P29_1.csv",
+      "uncompressed_bytes": 2340341
+    },
+    {
+      "compressed_bytes": 535300,
+      "crc32": "1054c67b",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P29_2/P29_2.csv",
+      "uncompressed_bytes": 2010161
+    },
+    {
+      "compressed_bytes": 743160,
+      "crc32": "b988b19e",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P30_1/P30_1.csv",
+      "uncompressed_bytes": 2756632
+    },
+    {
+      "compressed_bytes": 551499,
+      "crc32": "5cba3f5c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P30_2/P30_2.csv",
+      "uncompressed_bytes": 2008400
+    },
+    {
+      "compressed_bytes": 785191,
+      "crc32": "ad5353e6",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P31_1/P31_1.csv",
+      "uncompressed_bytes": 2926882
+    },
+    {
+      "compressed_bytes": 829488,
+      "crc32": "3a36a523",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P32_1/P32_1.csv",
+      "uncompressed_bytes": 3140919
+    },
+    {
+      "compressed_bytes": 842200,
+      "crc32": "6ea7a768",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P32_2/P32_2.csv",
+      "uncompressed_bytes": 3146231
+    },
+    {
+      "compressed_bytes": 532464,
+      "crc32": "fea1a9bd",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P33_1/P33_1.csv",
+      "uncompressed_bytes": 1921976
+    },
+    {
+      "compressed_bytes": 507980,
+      "crc32": "c7c5d2a4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P34_1/P34_1.csv",
+      "uncompressed_bytes": 1930470
+    },
+    {
+      "compressed_bytes": 365566,
+      "crc32": "d7e982b7",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P34_2/P34_2.csv",
+      "uncompressed_bytes": 1393302
+    },
+    {
+      "compressed_bytes": 1185548,
+      "crc32": "b784f1be",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P35_1/P35_1.csv",
+      "uncompressed_bytes": 4667517
+    },
+    {
+      "compressed_bytes": 1021153,
+      "crc32": "78e28dbe",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P35_2/P35_2.csv",
+      "uncompressed_bytes": 4039511
+    },
+    {
+      "compressed_bytes": 495448,
+      "crc32": "1f1ea94f",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P36_1/P36_1.csv",
+      "uncompressed_bytes": 1886446
+    },
+    {
+      "compressed_bytes": 576028,
+      "crc32": "00476136",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P36_2/P36_2.csv",
+      "uncompressed_bytes": 2178490
+    },
+    {
+      "compressed_bytes": 620880,
+      "crc32": "8d9e1264",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P37_1/P37_1.csv",
+      "uncompressed_bytes": 2311586
+    },
+    {
+      "compressed_bytes": 536474,
+      "crc32": "209e011c",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P37_2/P37_2.csv",
+      "uncompressed_bytes": 1987927
+    },
+    {
+      "compressed_bytes": 391101,
+      "crc32": "75d9c301",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P38_2/P38_2.csv",
+      "uncompressed_bytes": 1413045
+    },
+    {
+      "compressed_bytes": 852227,
+      "crc32": "075b7166",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P39_1/P39_1.csv",
+      "uncompressed_bytes": 3054887
+    },
+    {
+      "compressed_bytes": 681684,
+      "crc32": "648ab992",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P39_2/P39_2.csv",
+      "uncompressed_bytes": 2459836
+    },
+    {
+      "compressed_bytes": 728655,
+      "crc32": "fe0e91f8",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P40_1/P40_1.csv",
+      "uncompressed_bytes": 2613188
+    },
+    {
+      "compressed_bytes": 699803,
+      "crc32": "cf7635c6",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P40_2/P40_2.csv",
+      "uncompressed_bytes": 2526547
+    },
+    {
+      "compressed_bytes": 614432,
+      "crc32": "758b1ec3",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P41_2/P41_2.csv",
+      "uncompressed_bytes": 2316087
+    },
+    {
+      "compressed_bytes": 867886,
+      "crc32": "e1310465",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P42_1/P42_1.csv",
+      "uncompressed_bytes": 3185630
+    },
+    {
+      "compressed_bytes": 642270,
+      "crc32": "d78c19be",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P42_2/P42_2.csv",
+      "uncompressed_bytes": 2334430
+    },
+    {
+      "compressed_bytes": 534717,
+      "crc32": "0b8a7d3b",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P43_2/P43_2.csv",
+      "uncompressed_bytes": 1927146
+    },
+    {
+      "compressed_bytes": 1118302,
+      "crc32": "5e169d9e",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P44_1/P44_1.csv",
+      "uncompressed_bytes": 4147171
+    },
+    {
+      "compressed_bytes": 848209,
+      "crc32": "b5980991",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P44_2/P44_2.csv",
+      "uncompressed_bytes": 3216195
+    },
+    {
+      "compressed_bytes": 1060171,
+      "crc32": "a9902785",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P45_1/P45_1.csv",
+      "uncompressed_bytes": 3954163
+    },
+    {
+      "compressed_bytes": 512729,
+      "crc32": "57d1f634",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P45_2/P45_2.csv",
+      "uncompressed_bytes": 1907608
+    },
+    {
+      "compressed_bytes": 685987,
+      "crc32": "5cc028e8",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P46_1/P46_1.csv",
+      "uncompressed_bytes": 2501838
+    },
+    {
+      "compressed_bytes": 538251,
+      "crc32": "371a0b7e",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P46_2/P46_2.csv",
+      "uncompressed_bytes": 1951998
+    },
+    {
+      "compressed_bytes": 638432,
+      "crc32": "31d56942",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P47_1/P47_1.csv",
+      "uncompressed_bytes": 2301059
+    },
+    {
+      "compressed_bytes": 475971,
+      "crc32": "a574e3c4",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P47_2/P47_2.csv",
+      "uncompressed_bytes": 1704624
+    },
+    {
+      "compressed_bytes": 602637,
+      "crc32": "bfc1bcb0",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P48_1/P48_1.csv",
+      "uncompressed_bytes": 2116713
+    },
+    {
+      "compressed_bytes": 879685,
+      "crc32": "dbd5c7c8",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P49_1/P49_1.csv",
+      "uncompressed_bytes": 3164634
+    },
+    {
+      "compressed_bytes": 481362,
+      "crc32": "9e321d95",
+      "nested_archive": "PMCD.zip",
+      "source_archive": "PainMonit.zip",
+      "source_member": "PMPDB/raw-data/P49_2/P49_2.csv",
+      "uncompressed_bytes": 1713447
+    }
+  ]
+}

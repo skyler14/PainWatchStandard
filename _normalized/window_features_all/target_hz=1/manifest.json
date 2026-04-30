@@ -1,0 +1,135 @@
+{
+  "columns": 383,
+  "config": {
+    "max_windows_per_session": 100,
+    "min_source_rows": 2,
+    "target_hz": 1.0,
+    "window_seconds": 30.0
+  },
+  "coverage": [
+    {
+      "dataset_id": "normalized_rheumapain_painmonit",
+      "reason": null,
+      "rows": 32981,
+      "sessions": 173,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "wearable_sports_health",
+      "reason": null,
+      "rows": 500,
+      "sessions": 10,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "catsa",
+      "reason": null,
+      "rows": 20000,
+      "sessions": 200,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "induced_stress_exercise",
+      "reason": null,
+      "rows": 9901,
+      "sessions": 100,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "wesad",
+      "reason": null,
+      "rows": 1500,
+      "sessions": 15,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "epm_e4",
+      "reason": null,
+      "rows": 17867,
+      "sessions": 353,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "reason": null,
+      "rows": 8600,
+      "sessions": 86,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "physiopain_eeg",
+      "reason": null,
+      "rows": 8300,
+      "sessions": 83,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "merged_wearable_stress",
+      "reason": null,
+      "rows": 3300,
+      "sessions": 33,
+      "status": "ok"
+    },
+    {
+      "dataset_id": "sample_27_9vuw",
+      "reason": "front/back/water high-volume auxiliary IMU files skipped in first all-dataset pass",
+      "rows": 200,
+      "sessions": 2,
+      "status": "ok"
+    }
+  ],
+  "datasets": [
+    {
+      "dataset_id": "catsa",
+      "rows": 20000
+    },
+    {
+      "dataset_id": "epm_e4",
+      "rows": 17867
+    },
+    {
+      "dataset_id": "induced_stress_exercise",
+      "rows": 9901
+    },
+    {
+      "dataset_id": "merged_wearable_stress",
+      "rows": 3300
+    },
+    {
+      "dataset_id": "painmonit",
+      "rows": 9217
+    },
+    {
+      "dataset_id": "physiopain_eeg",
+      "rows": 8300
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "rows": 8600
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 23764
+    },
+    {
+      "dataset_id": "sample_27_9vuw",
+      "rows": 200
+    },
+    {
+      "dataset_id": "wearable_sports_health",
+      "rows": 500
+    },
+    {
+      "dataset_id": "wesad",
+      "rows": 1500
+    }
+  ],
+  "output": "_normalized/window_features_all/target_hz=1/window_features.parquet",
+  "rows": 103149,
+  "state_atlas": {
+    "assignments": "_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_assignments.parquet",
+    "bins_by_dataset": "_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_bins_by_dataset.csv",
+    "cluster_summary": "_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_cluster_summary.csv",
+    "rows": 103149
+  }
+}

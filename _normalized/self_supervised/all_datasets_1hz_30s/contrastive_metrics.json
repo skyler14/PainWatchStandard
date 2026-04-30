@@ -1,0 +1,16 @@
+{
+  "components": 40,
+  "dropout_probability": 0.45,
+  "explained_variance_ratio_sum": 0.8684700521016779,
+  "features": 345,
+  "noise_scale": 0.025,
+  "positive_cosine_mean": 0.8579415076914189,
+  "positive_minus_negative_mean": 0.19087898025630323,
+  "random_negative_cosine_mean": 0.6670625274351156,
+  "rows": 60000,
+  "status": "ok",
+  "top1_same_dataset_rate": 0.9732,
+  "top1_same_row_rate": 0.020266666666666665,
+  "top1_same_session_rate": 0.23633333333333334,
+  "top1_same_subject_rate": 0.33476666666666666
+}

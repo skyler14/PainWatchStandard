@@ -1,0 +1,46 @@
+{
+  "by_dataset": [
+    {
+      "dataset_id": "painmonit",
+      "high_pain_rate": 0.5964394932284841,
+      "max_pain": 10.0,
+      "mean_pain": 4.521969113843294,
+      "mean_weight": 1.790025522521901,
+      "min_pain": 1.0,
+      "nonzero_pain_rate": 1.0,
+      "rows": 9156,
+      "sessions": 90,
+      "subjects": 49,
+      "weight_sum": 16389.473684210527
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "high_pain_rate": 0.22093023255813954,
+      "max_pain": 5.0,
+      "mean_pain": 2.6744186046511627,
+      "mean_weight": 2.0328029375764998,
+      "min_pain": 1.0,
+      "nonzero_pain_rate": 1.0,
+      "rows": 8600,
+      "sessions": 86,
+      "subjects": 86,
+      "weight_sum": 17482.105263157897
+    },
+    {
+      "dataset_id": "rheumapain",
+      "high_pain_rate": 0.04405823935364417,
+      "max_pain": 4.0,
+      "mean_pain": 1.3566174149974752,
+      "mean_weight": 0.32184905961250543,
+      "min_pain": 0.0,
+      "nonzero_pain_rate": 0.6665965325702744,
+      "rows": 23764,
+      "sessions": 83,
+      "subjects": 42,
+      "weight_sum": 7648.421052631579
+    }
+  ],
+  "columns": 395,
+  "note": "Targets are not perfectly harmonized across datasets; use leave-dataset and within-dataset splits for interpretation.",
+  "rows": 41520
+}

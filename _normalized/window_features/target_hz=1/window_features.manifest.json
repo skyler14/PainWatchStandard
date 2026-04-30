@@ -1,0 +1,48 @@
+{
+  "by_dataset": [
+    {
+      "dataset_id": "painmonit",
+      "rows": 9217,
+      "sessions": 90,
+      "subjects": 49,
+      "target_available": 9156
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 23764,
+      "sessions": 83,
+      "subjects": 42,
+      "target_available": 23764
+    }
+  ],
+  "columns": 201,
+  "config": {
+    "baseline_conditions": [
+      "rest",
+      "baseline"
+    ],
+    "include_partial_windows": false,
+    "min_window_rows": 2,
+    "target_hz": 1.0,
+    "window_seconds": 30.0
+  },
+  "label_granularity": [
+    {
+      "dataset_id": "painmonit",
+      "rows": 61,
+      "target_granularity": "none"
+    },
+    {
+      "dataset_id": "painmonit",
+      "rows": 9156,
+      "target_granularity": "sparse_sample"
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 23764,
+      "target_granularity": "session_weak"
+    }
+  ],
+  "output": "_normalized/window_features/target_hz=1/window_features.parquet",
+  "rows": 32981
+}

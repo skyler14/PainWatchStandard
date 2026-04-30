@@ -1,0 +1,19 @@
+{
+  "config": {
+    "high_pain_threshold": 4.0,
+    "input_path": "_normalized/window_features_all/target_hz=1/window_features.parquet",
+    "min_test_rows": 100,
+    "min_train_rows": 500,
+    "model_iterations": 140,
+    "output_dir": "_normalized/supervised/first_pass_pain",
+    "random_state": 42,
+    "state_atlas_path": "_normalized/window_features_all/target_hz=1/state_atlas/baseline_state_assignments.parquet"
+  },
+  "outputs": {
+    "label_audit": "_normalized/supervised/first_pass_pain/label_audit.json",
+    "metrics": "_normalized/supervised/first_pass_pain/supervised_metrics.csv",
+    "predictions": "_normalized/supervised/first_pass_pain/supervised_predictions.parquet",
+    "report": "_normalized/supervised/first_pass_pain/SUPERVISED_PAIN_BASELINE_REPORT.md"
+  },
+  "rows": 41520
+}
