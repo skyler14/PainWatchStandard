@@ -11,16 +11,28 @@ final class RecordingViewModel: NSObject, ObservableObject {
     @Published var bearerTokenText: String
     @Published var liveUploadEnabled: Bool
     @Published var localModelEnabled: Bool
+    @Published var syntheticModeEnabled = false
+    @Published var syntheticPainBias = 0.0
     @Published private(set) var painActivationText = "Pain 0/10"
     @Published private(set) var painActivationCount = 0
     @Published private(set) var painDetectedMode = false
     @Published private(set) var dropoutText = "Dropout none"
+    @Published private(set) var bufferText = "Buffer 0/100"
+    @Published private(set) var questionnaireText = "Questionnaire idle"
+    @Published private(set) var voiceStatusText = "Voice idle"
+    @Published private(set) var transcriptText = ""
+    @Published private(set) var sensorRows: [SensorDisplayRow] = []
+    @Published private(set) var scoreRows: [ScoreDisplayRow] = []
 
     private let healthStore = HKHealthStore()
     private let store = RunStore()
     private let featureWindowBuilder = FeatureWindowBuilder()
     private let localScorer = LocalCoreMLPainScorer()
+    private var measurementBuffer = MeasurementBuffer(capacity: 100)
+    private var syntheticGenerator = SyntheticSampleGenerator()
+    private let voiceController = VoiceDialogueController()
     private var activationTracker = PainActivationTracker()
+    private var questionnaireTriggeredForRunID: UUID?
     private var workoutManager: WorkoutRecordingManager?
     private var motionRecorder: MotionRecorder?
     private var timer: Timer?
@@ -44,6 +56,8 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
         do {
             try await requestHealthAuthorization()
+            await voiceController.requestSpeechAuthorization()
+            voiceStatusText = voiceController.status
             status = "Ready"
         } catch {
             status = "Health authorization failed"
@@ -57,6 +71,13 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
         do {
             await featureWindowBuilder.reset()
+            measurementBuffer.reset()
+            syntheticGenerator = SyntheticSampleGenerator()
+            bufferText = measurementBuffer.countText
+            sensorRows = []
+            scoreRows = []
+            questionnaireText = "Questionnaire idle"
+            questionnaireTriggeredForRunID = nil
             try await store.begin(run: run)
             let manager = WorkoutRecordingManager(
                 healthStore: healthStore,
@@ -196,6 +217,9 @@ final class RecordingViewModel: NSObject, ObservableObject {
         guard let run = activeRun else { return }
         let settings = endpointSettings
         settings.save()
+        measurementBuffer.append(sample)
+        bufferText = measurementBuffer.countText
+        sensorRows = measurementBuffer.sensorRows()
 
         Task {
             if let window = await featureWindowBuilder.append(sample) {
@@ -241,7 +265,12 @@ final class RecordingViewModel: NSObject, ObservableObject {
         painActivationText = snapshot.isActive
             ? "Pain detected \(snapshot.positiveCount)/\(snapshot.windowCount)"
             : "Pain \(snapshot.positiveCount)/\(snapshot.windowCount)"
+        questionnaireText = snapshot.isActive ? "Questionnaire trigger ready" : "Questionnaire idle"
+        scoreRows = Self.scoreRows(from: score, activationText: painActivationText)
         apply(dropoutSignals: score.dropoutSignals ?? [])
+        if snapshot.isActive {
+            submitPainTriggerIfNeeded(score: score, snapshot: snapshot)
+        }
     }
 
     private func apply(dropoutSignals: [DropoutSignal]) {
@@ -269,5 +298,100 @@ final class RecordingViewModel: NSObject, ObservableObject {
         }
         let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
         elapsedText = String(format: "%02d:%02d", elapsed / 60, elapsed % 60)
+        emitSyntheticSamplesIfNeeded()
     }
+
+    func speakCurrentQuestion() {
+        let text = questionnaireText == "Questionnaire trigger ready" ? Self.initialPainPrompt : questionnaireText
+        voiceController.speak(text)
+        voiceStatusText = voiceController.status
+    }
+
+    func startListening() {
+        voiceController.startListeningPlaceholder()
+        voiceStatusText = voiceController.status
+        transcriptText = voiceController.transcript
+    }
+
+    private func submitPainTriggerIfNeeded(score: ScoreResult, snapshot: PainActivationSnapshot) {
+        guard let run = activeRun, questionnaireTriggeredForRunID != run.id else { return }
+        questionnaireTriggeredForRunID = run.id
+        questionnaireText = Self.initialPainPrompt
+        voiceController.speak(Self.initialPainPrompt)
+        voiceStatusText = voiceController.status
+
+        let payload = PainTriggerPayload(
+            runID: run.id,
+            deviceID: run.deviceID,
+            triggeredAt: Date(),
+            activationPositiveCount: snapshot.positiveCount,
+            activationWindowCount: snapshot.windowCount,
+            score: score,
+            buffer: measurementBuffer.payloadSamples(),
+            suggestedPrompt: Self.initialPainPrompt
+        )
+        let settings = endpointSettings
+        Task {
+            do {
+                let client = UploadClient(configuration: settings.uploadConfiguration)
+                guard let response = try await client.submitPainTrigger(payload: payload) else { return }
+                await MainActor.run {
+                    if let revisedScores = response.revisedScores {
+                        self.scoreRows = Self.scoreRows(from: revisedScores, activationText: self.painActivationText)
+                    }
+                    if let question = response.nextQuestion {
+                        self.questionnaireText = question
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.status = "Pain trigger queued locally"
+                }
+            }
+        }
+    }
+
+    private func emitSyntheticSamplesIfNeeded() {
+        guard syntheticModeEnabled, let run = activeRun else { return }
+        let samples = syntheticGenerator.samples(run: run, painBias: syntheticPainBias)
+        for sample in samples {
+            Task { try? await store.append(sample) }
+            handle(sample: sample)
+        }
+    }
+
+    private static func scoreRows(from score: ScoreResult, activationText: String) -> [ScoreDisplayRow] {
+        var rows: [ScoreDisplayRow] = [
+            ScoreDisplayRow(id: "activation", label: "Activation", valueText: activationText)
+        ]
+
+        if let value = score.painLikelihood01 {
+            rows.append(ScoreDisplayRow(id: "pain_likelihood", label: "Pain likelihood", valueText: percent(value)))
+        }
+        if let value = score.painScore0100 {
+            rows.append(ScoreDisplayRow(id: "pain_score", label: "Pain score", valueText: MeasurementBuffer.format(value)))
+        }
+        if let value = score.stressLikelihood01 {
+            rows.append(ScoreDisplayRow(id: "stress", label: "Stress likelihood", valueText: percent(value)))
+        }
+        if let value = score.baselineDeparture01 {
+            rows.append(ScoreDisplayRow(id: "baseline", label: "Baseline departure", valueText: percent(value)))
+        }
+        if let value = score.confidence01 {
+            rows.append(ScoreDisplayRow(id: "confidence", label: "Confidence", valueText: percent(value)))
+        }
+        if let value = score.quality01 {
+            rows.append(ScoreDisplayRow(id: "quality", label: "Quality", valueText: percent(value)))
+        }
+        if let modelVersion = score.modelVersion {
+            rows.append(ScoreDisplayRow(id: "model", label: "Model", valueText: modelVersion))
+        }
+        return rows
+    }
+
+    private static func percent(_ value: Double) -> String {
+        String(format: "%.0f%%", value * 100)
+    }
+
+    private static let initialPainPrompt = "What happened around when the pain started?"
 }

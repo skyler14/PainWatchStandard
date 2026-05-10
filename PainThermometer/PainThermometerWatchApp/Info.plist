@@ -22,6 +22,10 @@
 	<string>PainThermometer writes a workout session so recording can continue while the watch is active.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>PainThermometer records watch motion during personal debug recording sessions.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>PainThermometer can record short spoken context after a pain trigger during personal debug sessions.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>PainThermometer can transcribe short spoken context after a pain trigger during personal debug sessions.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>

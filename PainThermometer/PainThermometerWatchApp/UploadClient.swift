@@ -6,19 +6,22 @@ struct UploadConfiguration {
     let connectPath: String
     let liveSamplesPath: String
     let historicalImportPath: String
+    let painTriggerPath: String
 
     init(
         baseURL: URL?,
         bearerToken: String?,
         connectPath: String = "/v1/connect",
         liveSamplesPath: String = "/v1/live-samples",
-        historicalImportPath: String = "/v1/runs/import-jsonl"
+        historicalImportPath: String = "/v1/runs/import-jsonl",
+        painTriggerPath: String = "/v1/pain-trigger"
     ) {
         self.baseURL = baseURL
         self.bearerToken = bearerToken
         self.connectPath = connectPath
         self.liveSamplesPath = liveSamplesPath
         self.historicalImportPath = historicalImportPath
+        self.painTriggerPath = painTriggerPath
     }
 
     static let disabled = UploadConfiguration(baseURL: nil, bearerToken: nil)
@@ -45,6 +48,11 @@ struct UploadClient {
             sentAt: Date(),
             samples: samples
         )
+        return try await post(payload, to: url)
+    }
+
+    func submitPainTrigger(payload: PainTriggerPayload) async throws -> PainTriggerResponse? {
+        guard let url = endpointURL(path: configuration.painTriggerPath) else { return nil }
         return try await post(payload, to: url)
     }
 

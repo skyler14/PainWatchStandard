@@ -90,6 +90,48 @@ struct HistoricalUploadPayload: Codable, Sendable {
     }
 }
 
+struct PainTriggerPayload: Codable, Sendable {
+    let schemaVersion = 1
+    let source = "PainThermometerWatchApp"
+    let runID: UUID
+    let deviceID: UUID
+    let triggeredAt: Date
+    let activationPositiveCount: Int
+    let activationWindowCount: Int
+    let score: ScoreResult
+    let buffer: [BufferedMeasurementPayload]
+    let suggestedPrompt: String
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion = "schema_version"
+        case source
+        case runID = "run_id"
+        case deviceID = "device_id"
+        case triggeredAt = "triggered_at"
+        case activationPositiveCount = "activation_positive_count"
+        case activationWindowCount = "activation_window_count"
+        case score
+        case buffer
+        case suggestedPrompt = "suggested_prompt"
+    }
+}
+
+struct PainTriggerResponse: Codable, Sendable {
+    let accepted: Bool
+    let questionnaireSessionID: String?
+    let nextQuestion: String?
+    let missingFields: [String]?
+    let revisedScores: ScoreResult?
+
+    enum CodingKeys: String, CodingKey {
+        case accepted
+        case questionnaireSessionID = "questionnaire_session_id"
+        case nextQuestion = "next_question"
+        case missingFields = "missing_fields"
+        case revisedScores = "revised_scores"
+    }
+}
+
 struct LiveSamplesResponse: Codable, Sendable {
     let accepted: Bool
     let acceptedCount: Int?
