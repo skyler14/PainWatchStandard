@@ -13,6 +13,7 @@ DerivedData/
 xcodegen/
 **/.conda-r/
 pain-thermometer-exploration/phase_2/reference/Stress/
+inference_flow/experiments/coreml_sweep_*/*.mlmodel
 
 # Raw local archives are intentionally not part of the dashboard branch.
 *.zip
