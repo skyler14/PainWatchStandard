@@ -233,6 +233,81 @@ secondary error: name '_tree' is not defined
 
 The failure is expected for this artifact family. The server model should remain unchanged. The practical Core ML path is to train a separate watch-local model with the same input/output contract and a Core ML compatible estimator.
 
+## Core ML Compatibility Sorting
+
+Core ML as a model format is not the main blocker. The Core ML spec can represent
+pipelines, tree ensemble classifiers/regressors, generalized linear models,
+SVMs, neural networks, imputers, one-hot encoders, categorical mappings, and
+feature vectorizers. Those families have watchOS availability in the Core ML
+format lineage.
+
+The blocker is the current Python conversion path for the exact frozen artifact:
+
+```text
+sklearn Pipeline
+  ColumnTransformer
+    numeric: SimpleImputer(strategy=median, add_indicator=True)
+    categorical: SimpleImputer(strategy=most_frequent) + OneHotEncoder
+  HistGradientBoostingClassifier / HistGradientBoostingRegressor
+```
+
+`coremltools 9.0` currently disables the sklearn converter when sklearn 1.6.1 is
+installed:
+
+```text
+scikit-learn version 1.6.1 is not supported.
+Minimum required version: 0.17.
+Maximum required version: 1.5.1.
+Disabling scikit-learn conversion API.
+```
+
+The documented sklearn converter support includes logistic/linear models,
+SVC/SVR, ridge regression, classic Gradient Boosting, Decision Tree, Random
+Forest, imputer, scaler, normalizer, DictVectorizer, OneHotEncoder, and
+KNeighborsClassifier. It does not list sklearn `HistGradientBoostingClassifier`
+or `HistGradientBoostingRegressor`.
+
+Therefore the compatibility split is:
+
+| Component | In current `model.joblib` | Core ML format can represent the idea? | coremltools direct conversion status | Fix |
+| --- | --- | --- | --- | --- |
+| Model container | Python `joblib` dict with four sklearn payloads | No, not as a whole artifact | Not convertible as one bundle | Export one Core ML model per head, or train one compact local head. |
+| sklearn pipeline | `Pipeline(prep, model)` | Yes, Core ML supports pipelines | Potentially, only if every stage converts | Simplify and freeze preprocessing; avoid complex sklearn pipeline export. |
+| Numeric imputation | `SimpleImputer(median, add_indicator=True)` | Core ML has `Imputer`; indicators may need explicit features | Partially compatible | Precompute missing indicators in feature builder; export flat numeric inputs. |
+| Categorical preprocessing | `SimpleImputer` + `OneHotEncoder` for `baseline_state_bin`, `baseline_candidate` | Core ML has one-hot/categorical mapping | Potentially compatible | Prefer numeric encodings or fixed one-hot columns emitted by the feature builder. |
+| `pain_high_4_plus` estimator | `HistGradientBoostingClassifier` | Tree ensembles are representable | Blocked; HGB is not listed in sklearn converter support and current env disables sklearn conversion | Retrain watch classifier as logistic regression, classic GradientBoostingClassifier, RandomForestClassifier, or Torch MLP. |
+| `pain_nrs_regression` estimator | `HistGradientBoostingRegressor` | Tree ensemble regressors are representable | Same HGB/converter blocker | Retrain export-compatible regressor, or derive score from classifier probability for v1. |
+| `stress_binary` estimator | `HistGradientBoostingClassifier` | Tree ensemble classifier representable | Same HGB/converter blocker | Defer local stress head or retrain export-compatible stress head. |
+| `baseline_state_binary` estimator | `HistGradientBoostingClassifier` | Tree ensemble classifier representable | Same HGB/converter blocker | Defer local baseline head or retrain export-compatible baseline head. |
+| Feature contract | 70-125 named Phase 3 columns depending on head | Yes, Core ML supports named scalar inputs | Compatible if exact names/types exist | Generate a manifest-driven Swift feature builder and zero-fill missing blocks. |
+| Watch runtime | `LocalCoreMLPainScorer` loads `.mlmodelc` | Yes | Ready, artifact missing | Add `PainThermometerPhase3Final.mlmodel` once trained/converted. |
+
+## Core ML Export Recommendation
+
+Do not try to force-convert the frozen server `model.joblib` as the watch v1.
+Keep it as the canonical server artifact.
+
+For watch-local Core ML, train a smaller sibling artifact over the same Phase 3
+rows and a manifest-stable feature subset:
+
+```text
+input = flat Double features emitted by Swift FeatureWindowBuilder
+primary output = pain_likelihood_0_1
+optional output = pain_flag
+```
+
+Best first candidates:
+
+1. `LogisticRegression` over standardized numeric features.
+2. Classic `GradientBoostingClassifier`, if conversion succeeds in the pinned
+   coremltools/sklearn environment.
+3. Small `RandomForestClassifier`, if model size and latency are acceptable.
+4. Tiny PyTorch MLP converted through the unified Core ML API.
+
+For the first watch PoC, the lowest-risk path is logistic regression or a tiny
+PyTorch MLP because both avoid sklearn `HistGradientBoosting` and can use a fully
+numeric, already-imputed input vector.
+
 ## ONNX Status
 
 There is currently no ONNX artifact.
