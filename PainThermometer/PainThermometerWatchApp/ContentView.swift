@@ -65,6 +65,11 @@ private struct RecordingTab: View {
                 SecureField("Token", text: $recorder.bearerTokenText)
                 Toggle("Live", isOn: $recorder.liveUploadEnabled)
                 Toggle("Local ML", isOn: $recorder.localModelEnabled)
+                Picker("Signal", selection: $recorder.signalMode) {
+                    ForEach(SignalMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
+                }
                 Toggle("Synthetic", isOn: $recorder.syntheticModeEnabled)
                 if recorder.syntheticModeEnabled {
                     Text("Bias \(Int(recorder.syntheticPainBias * 100))")

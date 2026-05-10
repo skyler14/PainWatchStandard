@@ -103,6 +103,22 @@ enum DeviceIdentity {
     }
 }
 
+enum SignalMode: String, CaseIterable, Identifiable {
+    case dummy
+    case actual
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .dummy:
+            return "Dummy"
+        case .actual:
+            return "Actual"
+        }
+    }
+}
+
 extension JSONEncoder {
     static var painThermometer: JSONEncoder {
         let encoder = JSONEncoder()

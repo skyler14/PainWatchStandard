@@ -11,6 +11,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     @Published var bearerTokenText: String
     @Published var liveUploadEnabled: Bool
     @Published var localModelEnabled: Bool
+    @Published var signalMode: SignalMode = .dummy
     @Published var syntheticModeEnabled = false
     @Published var syntheticPainBias = 0.0
     @Published private(set) var painActivationText = "Pain 0/10"
@@ -223,11 +224,17 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
         Task {
             if let window = await featureWindowBuilder.append(sample) {
-                let localScore = await localScorer.score(window, enabled: settings.localModelEnabled)
+                let localScore: ScoreResult?
+                switch signalMode {
+                case .dummy:
+                    localScore = dummyScore(for: window)
+                case .actual:
+                    localScore = await localScorer.score(window, enabled: settings.localModelEnabled)
+                }
                 await MainActor.run {
                     if let localScore {
                         self.apply(score: localScore)
-                    } else if settings.localModelEnabled {
+                    } else if settings.localModelEnabled && self.signalMode == .actual {
                         self.status = "Local model unavailable"
                     }
                     self.apply(dropoutSignals: window.dropoutSignals)
@@ -330,25 +337,46 @@ final class RecordingViewModel: NSObject, ObservableObject {
             buffer: measurementBuffer.payloadSamples(),
             suggestedPrompt: Self.initialPainPrompt
         )
-        let settings = endpointSettings
-        Task {
-            do {
-                let client = UploadClient(configuration: settings.uploadConfiguration)
-                guard let response = try await client.submitPainTrigger(payload: payload) else { return }
-                await MainActor.run {
-                    if let revisedScores = response.revisedScores {
-                        self.scoreRows = Self.scoreRows(from: revisedScores, activationText: self.painActivationText)
-                    }
-                    if let question = response.nextQuestion {
-                        self.questionnaireText = question
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.status = "Pain trigger queued locally"
-                }
-            }
-        }
+        _ = payload
+        status = "Pain trigger local only"
+    }
+
+    private func dummyScore(for window: FeatureWindow) -> ScoreResult {
+        let heartRate = window.features["hr__last"] ?? window.features["hr__mean"] ?? 74
+        let respiration = window.features["respiration__last"] ?? window.features["respiration__mean"] ?? 15
+        let temperature = window.features["temperature__last"] ?? window.features["temperature__mean"] ?? 33.1
+        let motion = window.features["acc__mag__mean"] ?? 0.05
+        let bias = syntheticModeEnabled ? syntheticPainBias : 0
+        let physiologicalSignal =
+            normalized(heartRate, low: 68, high: 112) * 0.34
+            + normalized(respiration, low: 12, high: 24) * 0.18
+            + normalized(temperature, low: 32.8, high: 34.2) * 0.12
+            + normalized(motion, low: 0.02, high: 0.35) * 0.16
+            + bias * 0.20
+        let painLikelihood = min(0.99, max(0.01, physiologicalSignal))
+        let missingCount = window.dropoutSignals.filter { $0.present == false || ($0.validFrac ?? 1) <= 0 }.count
+        let quality = min(1, max(0.2, 1 - 0.07 * Double(missingCount)))
+        let confidence = min(0.95, max(0.05, 0.5 * quality + abs(painLikelihood - 0.5)))
+
+        return ScoreResult(
+            scoreName: "dummy_watch_signal",
+            painLikelihood01: painLikelihood,
+            painScore0100: painLikelihood * 100,
+            painDetected: painLikelihood >= 0.65 && confidence >= 0.50 && quality >= 0.60,
+            confidence01: confidence,
+            quality01: quality,
+            stressLikelihood01: nil,
+            baselineDeparture01: nil,
+            windowStartUTC: window.windowStartUTC,
+            windowEndUTC: window.windowEndUTC,
+            modelVersion: "dummy_dropout_signal",
+            dropoutSignals: window.dropoutSignals
+        )
+    }
+
+    private func normalized(_ value: Double, low: Double, high: Double) -> Double {
+        guard high > low else { return 0 }
+        return min(1, max(0, (value - low) / (high - low)))
     }
 
     private func emitSyntheticSamplesIfNeeded() {

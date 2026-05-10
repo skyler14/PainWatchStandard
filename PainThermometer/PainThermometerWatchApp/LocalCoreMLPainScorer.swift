@@ -2,57 +2,99 @@ import CoreML
 import Foundation
 
 actor LocalCoreMLPainScorer {
-    private var model: MLModel?
+    private let modelResourceNames = [
+        "watch_friendly_linear_svc",
+        "watch_friendly_svc_linear",
+        "watch_friendly_svc_rbf",
+        "watch_friendly_decision_tree_depth3",
+        "watch_friendly_decision_tree_depth6",
+        "watch_friendly_random_forest_50_depth6",
+        "watch_friendly_random_forest_100_depth8",
+        "watch_friendly_gradient_boosting_50_depth2",
+        "watch_friendly_gradient_boosting_100_depth2"
+    ]
+    private var models: [MLModel]?
 
     func reset() {
-        model = nil
+        models = nil
     }
 
     func score(_ window: FeatureWindow, enabled: Bool) async -> ScoreResult? {
         guard enabled else { return nil }
-        guard let model = loadModel() else { return nil }
+        let loadedModels = loadModels()
+        guard !loadedModels.isEmpty else { return nil }
 
-        let providerValues = window.features.reduce(into: [String: MLFeatureValue]()) { partialResult, item in
-            partialResult[item.key] = MLFeatureValue(double: item.value)
+        var painLikelihoods: [Double] = []
+        for model in loadedModels {
+            let providerValues = model.modelDescription.inputDescriptionsByName.keys.reduce(into: [String: MLFeatureValue]()) { partialResult, featureName in
+                partialResult[featureName] = MLFeatureValue(double: window.features[featureName] ?? 0)
+            }
+
+            guard
+                let provider = try? MLDictionaryFeatureProvider(dictionary: providerValues),
+                let output = try? await model.prediction(from: provider),
+                let likelihood = output.probabilityForPositiveClass()
+            else {
+                continue
+            }
+            painLikelihoods.append(likelihood)
         }
 
-        guard
-            let provider = try? MLDictionaryFeatureProvider(dictionary: providerValues),
-            let output = try? await model.prediction(from: provider)
-        else {
-            return nil
-        }
+        guard !painLikelihoods.isEmpty else { return nil }
+        let painLikelihood = painLikelihoods.reduce(0, +) / Double(painLikelihoods.count)
+        let quality = qualityScore(from: window.dropoutSignals)
+        let confidence = min(0.95, max(0.05, 0.5 * quality + abs(painLikelihood - 0.5)))
 
         return ScoreResult(
-            scoreName: "local_coreml",
-            painLikelihood01: output.doubleValue("pain_likelihood_0_1"),
-            painScore0100: output.doubleValue("pain_score_0_100"),
-            painDetected: output.doubleValue("pain_flag").map { $0 >= 0.5 },
-            confidence01: output.doubleValue("confidence_0_1"),
-            quality01: output.doubleValue("quality_0_1"),
-            stressLikelihood01: output.doubleValue("stress_likelihood_0_1"),
-            baselineDeparture01: output.doubleValue("baseline_departure_0_1"),
+            scoreName: "local_coreml_watch_ensemble",
+            painLikelihood01: painLikelihood,
+            painScore0100: painLikelihood * 100,
+            painDetected: painLikelihood >= 0.65 && confidence >= 0.50 && quality >= 0.60,
+            confidence01: confidence,
+            quality01: quality,
+            stressLikelihood01: nil,
+            baselineDeparture01: nil,
             windowStartUTC: window.windowStartUTC,
             windowEndUTC: window.windowEndUTC,
-            modelVersion: "pain-thermometer-phase3-final-v1",
+            modelVersion: "pain-thermometer-dropout-ensemble/watch_friendly",
             dropoutSignals: window.dropoutSignals
         )
     }
 
-    private func loadModel() -> MLModel? {
-        if let model {
-            return model
+    private func loadModels() -> [MLModel] {
+        if let models {
+            return models
         }
-        guard let url = Bundle.main.url(forResource: "PainThermometerPhase3Final", withExtension: "mlmodelc") else {
-            return nil
+        let loaded = modelResourceNames.compactMap { name -> MLModel? in
+            guard let url = Bundle.main.url(forResource: name, withExtension: "mlmodelc") else {
+                return nil
+            }
+            return try? MLModel(contentsOf: url)
         }
-        model = try? MLModel(contentsOf: url)
-        return model
+        models = loaded
+        return loaded
+    }
+
+    private func qualityScore(from dropoutSignals: [DropoutSignal]) -> Double {
+        let missingCount = dropoutSignals.filter { $0.present == false || ($0.validFrac ?? 1) <= 0 }.count
+        return min(1, max(0.2, 1 - 0.07 * Double(missingCount)))
     }
 }
 
 private extension MLFeatureProvider {
     func doubleValue(_ name: String) -> Double? {
         featureValue(for: name)?.doubleValue
+    }
+
+    func probabilityForPositiveClass() -> Double? {
+        guard let dictionary = featureValue(for: "pain_scores")?.dictionaryValue else {
+            return nil
+        }
+        for (key, value) in dictionary {
+            if "\(key)" == "1" || "\(key)" == "1.0" || "\(key)" == "true" {
+                return value.doubleValue
+            }
+        }
+        return dictionary.values.map(\.doubleValue).max()
     }
 }
