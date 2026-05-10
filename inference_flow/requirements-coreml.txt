@@ -1,5 +1,8 @@
 coremltools
 joblib
 numpy
+onnx
+onnxruntime
 pandas
-scikit-learn==1.6.1
+scikit-learn==1.5.1
+skl2onnx

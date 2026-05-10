@@ -1,0 +1,899 @@
+{
+  "artifact_bytes": 2832967,
+  "artifact_path": "/Users/skyler/Downloads/pain datasets/inference_flow/models/pain-thermometer-dropout-ensemble/model.joblib",
+  "artifact_sha256": "f1b9f47f87f9d24252200fe4b1c44705fe57cfc65de5131cdb3ff9ad3905d8c1",
+  "created_at_utc": "2026-05-10T19:03:53.145788+00:00",
+  "evaluation": {
+    "full_sensor": {
+      "baseline": {
+        "accuracy": 0.7629258331012717,
+        "average_precision": 0.6354374305710196,
+        "balanced_accuracy": 0.6304205569051838,
+        "conversion_status": "not_coreml_sklearn_supported",
+        "features": 213,
+        "model_name": "hgb_current_family",
+        "roc_auc": 0.791531346730565,
+        "test_rows": 10773,
+        "train_rows": 61494,
+        "train_seconds": 4.101225624996005
+      },
+      "columns": [
+        "bvp__present",
+        "bvp__valid_count",
+        "bvp__valid_frac",
+        "bvp__mean",
+        "bvp__std",
+        "bvp__min",
+        "bvp__max",
+        "bvp__last",
+        "bvp__slope_per_s",
+        "bvp__peak_count",
+        "bvp_rb__present",
+        "bvp_rb__valid_count",
+        "bvp_rb__valid_frac",
+        "bvp_rb__mean",
+        "bvp_rb__std",
+        "bvp_rb__min",
+        "bvp_rb__max",
+        "bvp_rb__last",
+        "bvp_rb__slope_per_s",
+        "bvp_rb__peak_count",
+        "eda__present",
+        "eda__valid_count",
+        "eda__valid_frac",
+        "eda__mean",
+        "eda__std",
+        "eda__min",
+        "eda__max",
+        "eda__last",
+        "eda__slope_per_s",
+        "eda__peak_count",
+        "eda_rb__present",
+        "eda_rb__valid_count",
+        "eda_rb__valid_frac",
+        "eda_rb__mean",
+        "eda_rb__std",
+        "eda_rb__min",
+        "eda_rb__max",
+        "eda_rb__last",
+        "eda_rb__slope_per_s",
+        "eda_rb__peak_count",
+        "temperature__present",
+        "temperature__valid_count",
+        "temperature__valid_frac",
+        "temperature__mean",
+        "temperature__std",
+        "temperature__min",
+        "temperature__max",
+        "temperature__last",
+        "temperature__slope_per_s",
+        "temperature__peak_count",
+        "acc_x__present",
+        "acc_x__valid_count",
+        "acc_x__valid_frac",
+        "acc_x__mean",
+        "acc_x__std",
+        "acc_x__min",
+        "acc_x__max",
+        "acc_x__last",
+        "acc_x__slope_per_s",
+        "acc_x__peak_count",
+        "acc_y__present",
+        "acc_y__valid_count",
+        "acc_y__valid_frac",
+        "acc_y__mean",
+        "acc_y__std",
+        "acc_y__min",
+        "acc_y__max",
+        "acc_y__last",
+        "acc_y__slope_per_s",
+        "acc_y__peak_count",
+        "acc_z__present",
+        "acc_z__valid_count",
+        "acc_z__valid_frac",
+        "acc_z__mean",
+        "acc_z__std",
+        "acc_z__min",
+        "acc_z__max",
+        "acc_z__last",
+        "acc_z__slope_per_s",
+        "acc_z__peak_count",
+        "acc__mag__present",
+        "acc__mag__valid_count",
+        "acc__mag__valid_frac",
+        "acc__mag__mean",
+        "acc__mag__std",
+        "acc__mag__min",
+        "acc__mag__max",
+        "acc__mag__last",
+        "acc__mag__slope_per_s",
+        "acc__mag__peak_count",
+        "acc__present",
+        "acc__valid_count",
+        "acc__valid_frac",
+        "acc__stillness_frac",
+        "respiration__present",
+        "respiration__valid_count",
+        "respiration__valid_frac",
+        "respiration__mean",
+        "respiration__std",
+        "respiration__min",
+        "respiration__max",
+        "respiration__last",
+        "respiration__slope_per_s",
+        "respiration__peak_count",
+        "emg__present",
+        "emg__valid_count",
+        "emg__valid_frac",
+        "emg__mean",
+        "emg__std",
+        "emg__min",
+        "emg__max",
+        "emg__last",
+        "emg__slope_per_s",
+        "emg__peak_count",
+        "grip__present",
+        "grip__valid_count",
+        "grip__valid_frac",
+        "grip__mean",
+        "grip__std",
+        "grip__min",
+        "grip__max",
+        "grip__last",
+        "grip__slope_per_s",
+        "grip__peak_count",
+        "bvp__mean__baseline_mean",
+        "bvp__mean__baseline_std",
+        "bvp__mean__delta_from_baseline",
+        "bvp__mean__z_from_baseline",
+        "eda__mean__baseline_mean",
+        "eda__mean__baseline_std",
+        "eda__mean__delta_from_baseline",
+        "eda__mean__z_from_baseline",
+        "temperature__mean__baseline_mean",
+        "temperature__mean__baseline_std",
+        "temperature__mean__delta_from_baseline",
+        "temperature__mean__z_from_baseline",
+        "acc_x__mean__baseline_mean",
+        "acc_x__mean__baseline_std",
+        "acc_x__mean__delta_from_baseline",
+        "acc_x__mean__z_from_baseline",
+        "acc_y__mean__baseline_mean",
+        "acc_y__mean__baseline_std",
+        "acc_y__mean__delta_from_baseline",
+        "acc_y__mean__z_from_baseline",
+        "acc_z__mean__baseline_mean",
+        "acc_z__mean__baseline_std",
+        "acc_z__mean__delta_from_baseline",
+        "acc_z__mean__z_from_baseline",
+        "acc__mag__mean__baseline_mean",
+        "acc__mag__mean__baseline_std",
+        "acc__mag__mean__delta_from_baseline",
+        "acc__mag__mean__z_from_baseline",
+        "hr__present",
+        "hr__valid_count",
+        "hr__valid_frac",
+        "bp_systolic__present",
+        "bp_systolic__valid_count",
+        "bp_systolic__valid_frac",
+        "bp_diastolic__present",
+        "bp_diastolic__valid_count",
+        "bp_diastolic__valid_frac",
+        "spo2__present",
+        "spo2__valid_count",
+        "spo2__valid_frac",
+        "steps__present",
+        "steps__valid_count",
+        "steps__valid_frac",
+        "ibi__present",
+        "ibi__valid_count",
+        "ibi__valid_frac",
+        "ecg__present",
+        "ecg__valid_count",
+        "ecg__valid_frac",
+        "gyro__present",
+        "gyro__valid_count",
+        "gyro__valid_frac",
+        "eeg_delta__present",
+        "eeg_delta__valid_count",
+        "eeg_delta__valid_frac",
+        "eeg_theta__present",
+        "eeg_theta__valid_count",
+        "eeg_theta__valid_frac",
+        "eeg_alpha1__present",
+        "eeg_alpha1__valid_count",
+        "eeg_alpha1__valid_frac",
+        "eeg_alpha2__present",
+        "eeg_alpha2__valid_count",
+        "eeg_alpha2__valid_frac",
+        "eeg_beta1__present",
+        "eeg_beta1__valid_count",
+        "eeg_beta1__valid_frac",
+        "eeg_beta2__present",
+        "eeg_beta2__valid_count",
+        "eeg_beta2__valid_frac",
+        "eeg_gamma1__present",
+        "eeg_gamma1__valid_count",
+        "eeg_gamma1__valid_frac",
+        "eeg_gamma2__present",
+        "eeg_gamma2__valid_count",
+        "eeg_gamma2__valid_frac",
+        "eeg_attention__present",
+        "eeg_attention__valid_count",
+        "eeg_attention__valid_frac",
+        "eeg_meditation__present",
+        "eeg_meditation__valid_count",
+        "eeg_meditation__valid_frac",
+        "baseline_abs_delta_mean",
+        "baseline_abs_delta_max",
+        "baseline_feature_count",
+        "baseline_missing",
+        "state_cluster_id",
+        "baseline_l2_delta",
+        "baseline_anchor_available"
+      ],
+      "dropout_training": {
+        "augmented_train_rows": 61494,
+        "copies": 1,
+        "original_train_rows": 30747,
+        "probability": 0.35
+      },
+      "ensemble": {
+        "accuracy": 0.7732293697205977,
+        "average_precision": 0.6816790417950029,
+        "balanced_accuracy": 0.6945675667039148,
+        "features": 213,
+        "members": [
+          "linear_svc",
+          "svc_linear",
+          "svc_rbf",
+          "decision_tree_depth3",
+          "decision_tree_depth6",
+          "random_forest_50_depth6",
+          "random_forest_100_depth8",
+          "gradient_boosting_50_depth2",
+          "gradient_boosting_100_depth2"
+        ],
+        "model_name": "soft_vote_all_nine",
+        "relative_auc_vs_hgb": 1.074143272824205,
+        "roc_auc": 0.8502180713201198,
+        "test_rows": 10773,
+        "train_rows": 61494
+      },
+      "members": [
+        {
+          "accuracy": 0.7680311890838206,
+          "average_precision": 0.6793441018726932,
+          "balanced_accuracy": 0.6993764473773816,
+          "features": 213,
+          "model_name": "linear_svc",
+          "relative_auc_vs_hgb": 1.0840375111672964,
+          "roc_auc": 0.8580496711207,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 7.765973917004885
+        },
+        {
+          "accuracy": 0.7674742411584516,
+          "average_precision": 0.6415853187204614,
+          "balanced_accuracy": 0.6964942405562464,
+          "features": 213,
+          "model_name": "svc_linear",
+          "relative_auc_vs_hgb": 1.0456441686338378,
+          "roc_auc": 0.8276601369997036,
+          "test_rows": 10773,
+          "train_rows": 3000,
+          "train_seconds": 1.170441916998243
+        },
+        {
+          "accuracy": 0.7348927875243665,
+          "average_precision": 0.553113188455303,
+          "balanced_accuracy": 0.633129844460558,
+          "features": 213,
+          "model_name": "svc_rbf",
+          "relative_auc_vs_hgb": 0.9135134607809009,
+          "roc_auc": 0.7230745398684056,
+          "test_rows": 10773,
+          "train_rows": 3000,
+          "train_seconds": 1.520500666985754
+        },
+        {
+          "accuracy": 0.7607908660540239,
+          "average_precision": 0.6152604743739183,
+          "balanced_accuracy": 0.7524217528000393,
+          "features": 213,
+          "model_name": "decision_tree_depth3",
+          "relative_auc_vs_hgb": 0.9944561327784128,
+          "roc_auc": 0.7871432020425667,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 1.3349757500109263
+        },
+        {
+          "accuracy": 0.740369442123828,
+          "average_precision": 0.5874627444694023,
+          "balanced_accuracy": 0.6862002046936942,
+          "features": 213,
+          "model_name": "decision_tree_depth6",
+          "relative_auc_vs_hgb": 0.96257118393438,
+          "roc_auc": 0.7619052655436143,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 1.4982092920108698
+        },
+        {
+          "accuracy": 0.7552213868003341,
+          "average_precision": 0.6423242553811304,
+          "balanced_accuracy": 0.7242208590579835,
+          "features": 213,
+          "model_name": "random_forest_50_depth6",
+          "relative_auc_vs_hgb": 0.9508706930260832,
+          "roc_auc": 0.7526439602175613,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 1.1764046669995878
+        },
+        {
+          "accuracy": 0.765989046690801,
+          "average_precision": 0.6349723727940622,
+          "balanced_accuracy": 0.7053730082144456,
+          "features": 213,
+          "model_name": "random_forest_100_depth8",
+          "relative_auc_vs_hgb": 0.9987721000775536,
+          "roc_auc": 0.7905594254513006,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 1.6816876250086352
+        },
+        {
+          "accuracy": 0.755128562146106,
+          "average_precision": 0.6589814405383456,
+          "balanced_accuracy": 0.5957489708428545,
+          "features": 213,
+          "model_name": "gradient_boosting_50_depth2",
+          "relative_auc_vs_hgb": 1.0117115437200064,
+          "roc_auc": 0.8008014007035555,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 26.093762249976862
+        },
+        {
+          "accuracy": 0.7603267427828831,
+          "average_precision": 0.6662988889785885,
+          "balanced_accuracy": 0.6045171892840001,
+          "features": 213,
+          "model_name": "gradient_boosting_100_depth2",
+          "relative_auc_vs_hgb": 0.9748689677496336,
+          "roc_auc": 0.7716393469287033,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 52.21153637499083
+        }
+      ],
+      "sensor_blocks": [
+        "bvp",
+        "bvp_rb",
+        "hr",
+        "ibi",
+        "ecg",
+        "eda",
+        "eda_rb",
+        "temperature",
+        "acc",
+        "gyro",
+        "respiration",
+        "emg",
+        "grip",
+        "bp",
+        "spo2",
+        "steps",
+        "eeg"
+      ],
+      "view": "full_sensor"
+    },
+    "watch_friendly": {
+      "baseline": {
+        "accuracy": 0.7472384665367121,
+        "average_precision": 0.5582561393799625,
+        "balanced_accuracy": 0.6252583212570516,
+        "conversion_status": "not_coreml_sklearn_supported",
+        "features": 110,
+        "model_name": "hgb_current_family",
+        "roc_auc": 0.7818590192922861,
+        "test_rows": 10773,
+        "train_rows": 61494,
+        "train_seconds": 2.3826660829945467
+      },
+      "columns": [
+        "bvp__present",
+        "bvp__valid_count",
+        "bvp__valid_frac",
+        "bvp__mean",
+        "bvp__std",
+        "bvp__min",
+        "bvp__max",
+        "bvp__last",
+        "bvp__slope_per_s",
+        "bvp__peak_count",
+        "temperature__present",
+        "temperature__valid_count",
+        "temperature__valid_frac",
+        "temperature__mean",
+        "temperature__std",
+        "temperature__min",
+        "temperature__max",
+        "temperature__last",
+        "temperature__slope_per_s",
+        "temperature__peak_count",
+        "acc_x__present",
+        "acc_x__valid_count",
+        "acc_x__valid_frac",
+        "acc_x__mean",
+        "acc_x__std",
+        "acc_x__min",
+        "acc_x__max",
+        "acc_x__last",
+        "acc_x__slope_per_s",
+        "acc_x__peak_count",
+        "acc_y__present",
+        "acc_y__valid_count",
+        "acc_y__valid_frac",
+        "acc_y__mean",
+        "acc_y__std",
+        "acc_y__min",
+        "acc_y__max",
+        "acc_y__last",
+        "acc_y__slope_per_s",
+        "acc_y__peak_count",
+        "acc_z__present",
+        "acc_z__valid_count",
+        "acc_z__valid_frac",
+        "acc_z__mean",
+        "acc_z__std",
+        "acc_z__min",
+        "acc_z__max",
+        "acc_z__last",
+        "acc_z__slope_per_s",
+        "acc_z__peak_count",
+        "acc__mag__present",
+        "acc__mag__valid_count",
+        "acc__mag__valid_frac",
+        "acc__mag__mean",
+        "acc__mag__std",
+        "acc__mag__min",
+        "acc__mag__max",
+        "acc__mag__last",
+        "acc__mag__slope_per_s",
+        "acc__mag__peak_count",
+        "acc__present",
+        "acc__valid_count",
+        "acc__valid_frac",
+        "acc__stillness_frac",
+        "bvp__mean__baseline_mean",
+        "bvp__mean__baseline_std",
+        "bvp__mean__delta_from_baseline",
+        "bvp__mean__z_from_baseline",
+        "temperature__mean__baseline_mean",
+        "temperature__mean__baseline_std",
+        "temperature__mean__delta_from_baseline",
+        "temperature__mean__z_from_baseline",
+        "acc_x__mean__baseline_mean",
+        "acc_x__mean__baseline_std",
+        "acc_x__mean__delta_from_baseline",
+        "acc_x__mean__z_from_baseline",
+        "acc_y__mean__baseline_mean",
+        "acc_y__mean__baseline_std",
+        "acc_y__mean__delta_from_baseline",
+        "acc_y__mean__z_from_baseline",
+        "acc_z__mean__baseline_mean",
+        "acc_z__mean__baseline_std",
+        "acc_z__mean__delta_from_baseline",
+        "acc_z__mean__z_from_baseline",
+        "acc__mag__mean__baseline_mean",
+        "acc__mag__mean__baseline_std",
+        "acc__mag__mean__delta_from_baseline",
+        "acc__mag__mean__z_from_baseline",
+        "hr__present",
+        "hr__valid_count",
+        "hr__valid_frac",
+        "spo2__present",
+        "spo2__valid_count",
+        "spo2__valid_frac",
+        "ibi__present",
+        "ibi__valid_count",
+        "ibi__valid_frac",
+        "ecg__present",
+        "ecg__valid_count",
+        "ecg__valid_frac",
+        "gyro__present",
+        "gyro__valid_count",
+        "gyro__valid_frac",
+        "baseline_abs_delta_mean",
+        "baseline_abs_delta_max",
+        "baseline_feature_count",
+        "baseline_missing",
+        "state_cluster_id",
+        "baseline_l2_delta",
+        "baseline_anchor_available"
+      ],
+      "dropout_training": {
+        "augmented_train_rows": 61494,
+        "copies": 1,
+        "original_train_rows": 30747,
+        "probability": 0.35
+      },
+      "ensemble": {
+        "accuracy": 0.7797270955165692,
+        "average_precision": 0.5642167955666417,
+        "balanced_accuracy": 0.7370968136770678,
+        "features": 110,
+        "members": [
+          "linear_svc",
+          "svc_linear",
+          "svc_rbf",
+          "decision_tree_depth3",
+          "decision_tree_depth6",
+          "random_forest_50_depth6",
+          "random_forest_100_depth8",
+          "gradient_boosting_50_depth2",
+          "gradient_boosting_100_depth2"
+        ],
+        "model_name": "soft_vote_all_nine",
+        "relative_auc_vs_hgb": 1.0333372803184935,
+        "roc_auc": 0.8079240725879755,
+        "test_rows": 10773,
+        "train_rows": 61494
+      },
+      "members": [
+        {
+          "accuracy": 0.7771280051981806,
+          "average_precision": 0.6127541628803309,
+          "balanced_accuracy": 0.7471328260651519,
+          "features": 110,
+          "model_name": "linear_svc",
+          "relative_auc_vs_hgb": 1.0469353096136687,
+          "roc_auc": 0.8185558144370089,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 2.47390133299632
+        },
+        {
+          "accuracy": 0.7835329063399239,
+          "average_precision": 0.6113606926885177,
+          "balanced_accuracy": 0.7576497059838527,
+          "features": 110,
+          "model_name": "svc_linear",
+          "relative_auc_vs_hgb": 1.0596203928360435,
+          "roc_auc": 0.8284737611648959,
+          "test_rows": 10773,
+          "train_rows": 3000,
+          "train_seconds": 0.6646784170006867
+        },
+        {
+          "accuracy": 0.7781490763946904,
+          "average_precision": 0.6011998687559706,
+          "balanced_accuracy": 0.736680452015068,
+          "features": 110,
+          "model_name": "svc_rbf",
+          "relative_auc_vs_hgb": 0.9401780640153365,
+          "roc_auc": 0.7350866990911512,
+          "test_rows": 10773,
+          "train_rows": 3000,
+          "train_seconds": 0.9421124169894028
+        },
+        {
+          "accuracy": 0.756242457996844,
+          "average_precision": 0.5444713243586266,
+          "balanced_accuracy": 0.7450934261023973,
+          "features": 110,
+          "model_name": "decision_tree_depth3",
+          "relative_auc_vs_hgb": 0.9779627420711041,
+          "roc_auc": 0.7646289904201083,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 0.8751533750037197
+        },
+        {
+          "accuracy": 0.7769423558897243,
+          "average_precision": 0.49393024523610685,
+          "balanced_accuracy": 0.7403448823413779,
+          "features": 110,
+          "model_name": "decision_tree_depth6",
+          "relative_auc_vs_hgb": 0.947626728955486,
+          "roc_auc": 0.7409105049562933,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 0.9822894590033684
+        },
+        {
+          "accuracy": 0.7735078436832823,
+          "average_precision": 0.542986833019199,
+          "balanced_accuracy": 0.7478323686957475,
+          "features": 110,
+          "model_name": "random_forest_50_depth6",
+          "relative_auc_vs_hgb": 0.9933588472477871,
+          "roc_auc": 0.7766665741144706,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 0.8500389590044506
+        },
+        {
+          "accuracy": 0.7902162814443516,
+          "average_precision": 0.5436607951680079,
+          "balanced_accuracy": 0.7545220236302186,
+          "features": 110,
+          "model_name": "random_forest_100_depth8",
+          "relative_auc_vs_hgb": 0.9676284089632778,
+          "roc_auc": 0.7565489988713835,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 1.3406396249774843
+        },
+        {
+          "accuracy": 0.7041678269748445,
+          "average_precision": 0.5286673901732537,
+          "balanced_accuracy": 0.5625715140276956,
+          "features": 110,
+          "model_name": "gradient_boosting_50_depth2",
+          "relative_auc_vs_hgb": 0.9848921963480478,
+          "roc_auc": 0.7700468467453103,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 20.410117374995025
+        },
+        {
+          "accuracy": 0.7669172932330827,
+          "average_precision": 0.5303437286995991,
+          "balanced_accuracy": 0.6748880604463321,
+          "features": 110,
+          "model_name": "gradient_boosting_100_depth2",
+          "relative_auc_vs_hgb": 0.9168829278322657,
+          "roc_auc": 0.7168731867607752,
+          "test_rows": 10773,
+          "train_rows": 61494,
+          "train_seconds": 43.60134733302402
+        }
+      ],
+      "sensor_blocks": [
+        "acc",
+        "gyro",
+        "bvp",
+        "hr",
+        "ibi",
+        "ecg",
+        "temperature",
+        "spo2"
+      ],
+      "view": "watch_friendly"
+    }
+  },
+  "exports": {
+    "full_sensor": {
+      "decision_tree_depth3": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_decision_tree_depth3.mlmodel",
+          "seconds": 0.013309208996361122,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_decision_tree_depth3.onnx",
+          "seconds": 0.004303458001231775,
+          "status": "converted"
+        }
+      },
+      "decision_tree_depth6": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_decision_tree_depth6.mlmodel",
+          "seconds": 0.01781674998346716,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_decision_tree_depth6.onnx",
+          "seconds": 0.005198375001782551,
+          "status": "converted"
+        }
+      },
+      "gradient_boosting_100_depth2": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_gradient_boosting_100_depth2.mlmodel",
+          "seconds": 0.03093237499706447,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_gradient_boosting_100_depth2.onnx",
+          "seconds": 0.00879158399766311,
+          "status": "converted"
+        }
+      },
+      "gradient_boosting_50_depth2": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_gradient_boosting_50_depth2.mlmodel",
+          "seconds": 0.019200584007194266,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_gradient_boosting_50_depth2.onnx",
+          "seconds": 0.010128833004273474,
+          "status": "converted"
+        }
+      },
+      "linear_svc": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_linear_svc.mlmodel",
+          "seconds": 0.616162374994019,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_linear_svc.onnx",
+          "seconds": 0.2343545829935465,
+          "status": "converted"
+        }
+      },
+      "random_forest_100_depth8": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_random_forest_100_depth8.mlmodel",
+          "seconds": 0.15900545800104737,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_random_forest_100_depth8.onnx",
+          "seconds": 0.4410439170023892,
+          "status": "converted"
+        }
+      },
+      "random_forest_50_depth6": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_random_forest_50_depth6.mlmodel",
+          "seconds": 0.04184570797951892,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_random_forest_50_depth6.onnx",
+          "seconds": 0.20415079200756736,
+          "status": "converted"
+        }
+      },
+      "svc_linear": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_svc_linear.mlmodel",
+          "seconds": 0.11588829100946896,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_svc_linear.onnx",
+          "seconds": 0.07031449998612516,
+          "status": "converted"
+        }
+      },
+      "svc_rbf": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_svc_rbf.mlmodel",
+          "seconds": 0.13195929198991507,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/full_sensor_svc_rbf.onnx",
+          "seconds": 0.08138766698539257,
+          "status": "converted"
+        }
+      }
+    },
+    "watch_friendly": {
+      "decision_tree_depth3": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_decision_tree_depth3.mlmodel",
+          "seconds": 0.013742374983849004,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_decision_tree_depth3.onnx",
+          "seconds": 0.004847290983889252,
+          "status": "converted"
+        }
+      },
+      "decision_tree_depth6": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_decision_tree_depth6.mlmodel",
+          "seconds": 0.014272375003201887,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_decision_tree_depth6.onnx",
+          "seconds": 0.005170624994207174,
+          "status": "converted"
+        }
+      },
+      "gradient_boosting_100_depth2": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_gradient_boosting_100_depth2.mlmodel",
+          "seconds": 0.01596666598925367,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_gradient_boosting_100_depth2.onnx",
+          "seconds": 0.007898332987679169,
+          "status": "converted"
+        }
+      },
+      "gradient_boosting_50_depth2": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_gradient_boosting_50_depth2.mlmodel",
+          "seconds": 0.014225082995835692,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_gradient_boosting_50_depth2.onnx",
+          "seconds": 0.007096707995515317,
+          "status": "converted"
+        }
+      },
+      "linear_svc": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_linear_svc.mlmodel",
+          "seconds": 0.012548332975711673,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_linear_svc.onnx",
+          "seconds": 0.007326959021156654,
+          "status": "converted"
+        }
+      },
+      "random_forest_100_depth8": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_random_forest_100_depth8.mlmodel",
+          "seconds": 0.14136029200744815,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_random_forest_100_depth8.onnx",
+          "seconds": 0.374419375002617,
+          "status": "converted"
+        }
+      },
+      "random_forest_50_depth6": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_random_forest_50_depth6.mlmodel",
+          "seconds": 0.040916416997788474,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_random_forest_50_depth6.onnx",
+          "seconds": 0.17928583300090395,
+          "status": "converted"
+        }
+      },
+      "svc_linear": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_svc_linear.mlmodel",
+          "seconds": 0.052820750017417595,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_svc_linear.onnx",
+          "seconds": 0.031643666996387765,
+          "status": "converted"
+        }
+      },
+      "svc_rbf": {
+        "coreml": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_svc_rbf.mlmodel",
+          "seconds": 0.06069537499570288,
+          "status": "converted"
+        },
+        "onnx": {
+          "path": "inference_flow/models/pain-thermometer-dropout-ensemble/exports/watch_friendly_svc_rbf.onnx",
+          "seconds": 0.038501165981870145,
+          "status": "converted"
+        }
+      }
+    }
+  },
+  "input_path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",
+  "input_sha256": "1d1ce43152fa481a99c27d166edfed09199698aab357be9ba32e3a4a51b1bdef",
+  "model_alias": "pain-thermometer-dropout-ensemble",
+  "model_version": "dropout_soft_vote_20260510",
+  "note": "All nine portable members are retained; dropout handling is trained by sensor-block masking instead of creating format-specific model versions.",
+  "positive_rate": 0.202504816955684,
+  "rows": 41520
+}
