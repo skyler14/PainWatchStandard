@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the Zerve dashboard flow artifacts.
+"""Smoke-test the dashboard inference artifacts.
 
 This does not rebuild raw archives. It verifies that the dashboard branch can
 consume the Phase 1/2/3 outputs, regenerate a compact PostgreSQL dump, load the
@@ -84,7 +84,7 @@ def score_sample_row() -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Zerve dashboard artifact smoke tests.")
+    parser = argparse.ArgumentParser(description="Run dashboard inference artifact smoke tests.")
     parser.add_argument("--skip-export", action="store_true", help="Skip regenerating the compact PostgreSQL dump.")
     args = parser.parse_args()
 

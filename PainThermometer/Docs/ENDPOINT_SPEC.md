@@ -1,4 +1,4 @@
-# Zerve Endpoint Spec
+# Endpoint Spec
 
 Status: app contract scaffold
 Date: 2026-04-29

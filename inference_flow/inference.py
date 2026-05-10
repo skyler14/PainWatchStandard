@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Minimal scoring helpers for the frozen Phase 3 artifact.
 
-Zerve can wrap these functions in its own HTTP/task surface. The expected input
+The inference service can wrap these functions in its own HTTP/task surface. The expected input
 is already-windowed Phase 3 style feature rows. Raw watch samples still need the
-server-side feeder step described in `PainThermometer/Docs/ZERVE_INFERENCE_CONTRACT.md`.
+server-side feeder step described in `PainThermometer/Docs/ENDPOINT_SPEC.md`.
 """
 
 from __future__ import annotations

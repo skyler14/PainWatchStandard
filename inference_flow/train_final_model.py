@@ -38,7 +38,7 @@ from phase3_multitask_baseline import (  # noqa: E402
 
 
 DEFAULT_INPUT = ROOT / "_normalized" / "phase3" / "target_hz=1" / "window_features.parquet"
-DEFAULT_OUTPUT = ROOT / "zerve_flow" / "models" / "pain-thermometer-phase3-final-v1"
+DEFAULT_OUTPUT = ROOT / "inference_flow" / "models" / "pain-thermometer-phase3-final-v1"
 
 
 @dataclass(frozen=True)
@@ -167,7 +167,7 @@ def build_artifact(input_path: Path, output_dir: Path, final_config: FinalModelC
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Train the frozen Phase 3 Zerve inference artifact.")
+    parser = argparse.ArgumentParser(description="Train the frozen Phase 3 inference artifact.")
     parser.add_argument("--input", default=str(DEFAULT_INPUT))
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     parser.add_argument("--model-iterations", type=int, default=80)

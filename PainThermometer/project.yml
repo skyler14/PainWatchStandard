@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: 5.9
     PRODUCT_BUNDLE_IDENTIFIER: dev.startai.PainThermometer
-    DEVELOPMENT_TEAM: "7AKWY35SGY"
+    DEVELOPMENT_TEAM: "A582NTL96F"
 targets:
   PainThermometerWatchApp:
     type: application

@@ -1,6 +1,6 @@
 {
   "artifact_bytes": 766201,
-  "artifact_path": "/Users/skyler/Downloads/pain datasets/zerve_flow/models/pain-thermometer-phase3-final-v1/model.joblib",
+  "artifact_path": "/Users/skyler/Downloads/pain datasets/inference_flow/models/pain-thermometer-phase3-final-v1/model.joblib",
   "artifact_sha256": "084f00fb024ad871d646ea929b9b93ac166ca6299c446adfea6d710f6a180cf6",
   "created_at_utc": "2026-04-30T03:58:05.806773+00:00",
   "input_path": "/Users/skyler/Downloads/pain datasets/_normalized/phase3/target_hz=1/window_features.parquet",

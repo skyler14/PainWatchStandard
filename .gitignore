@@ -9,10 +9,12 @@ __pycache__/
 xcuserdata/
 DerivedData/
 .build/
+.venv-coreml/
+xcodegen/
 **/.conda-r/
 pain-thermometer-exploration/phase_2/reference/Stress/
 
-# Raw local archives are intentionally not part of the Zerve dashboard branch.
+# Raw local archives are intentionally not part of the dashboard branch.
 *.zip
 *.tar
 *.tar.gz
