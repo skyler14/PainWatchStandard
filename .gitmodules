@@ -1,0 +1,3 @@
+[submodule "mcp/po-fastmcp"]
+	path = mcp/po-fastmcp
+	url = https://github.com/prompt-opinion/po-fastmcp
