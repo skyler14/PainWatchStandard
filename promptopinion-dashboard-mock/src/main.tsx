@@ -406,6 +406,9 @@ function App() {
   const [selectedPatientId, setSelectedPatientId] = React.useState(
     () => localStorage.getItem("painDashboard.selectedPatientId") || doctorAGroup.patients[0].id,
   );
+  const [selectedSessionId, setSelectedSessionId] = React.useState(
+    () => localStorage.getItem("painDashboard.selectedSessionId") || "",
+  );
   const doctorA = groups.find((group) => group.id === doctorAGroup.id) ?? doctorAGroup;
   const selectedGroup = groups.find((candidate) => candidate.id === selectedGroupId) ?? doctorA;
   const visiblePatients = selectedGroup.patients.length ? selectedGroup.patients : doctorA.patients;
@@ -414,7 +417,10 @@ function App() {
     visiblePatients[0] ??
     doctorAGroup.patients[0];
   const patientSessions = patient.sessions?.length ? patient.sessions : patient.incidents;
-  const incident = patientSessions[0] ?? doctorAGroup.patients[0].incidents[0];
+  const incident =
+    patientSessions.find((session) => (session.sessionId ?? session.id) === selectedSessionId) ??
+    patientSessions[0] ??
+    doctorAGroup.patients[0].incidents[0];
   const [accessDecision, setAccessDecision] = React.useState<AccessDecision | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = React.useState(true);
   const [summaryIndex, setSummaryIndex] = React.useState(0);
@@ -457,7 +463,14 @@ function App() {
   React.useEffect(() => {
     localStorage.setItem("painDashboard.selectedGroupId", selectedGroup.id);
     localStorage.setItem("painDashboard.selectedPatientId", patient.id);
-  }, [selectedGroup.id, patient.id]);
+    localStorage.setItem("painDashboard.selectedSessionId", incident.sessionId ?? incident.id);
+  }, [selectedGroup.id, patient.id, incident.sessionId, incident.id]);
+
+  React.useEffect(() => {
+    if (!patientSessions.some((session) => (session.sessionId ?? session.id) === selectedSessionId)) {
+      setSelectedSessionId(patientSessions[0]?.sessionId ?? patientSessions[0]?.id ?? "");
+    }
+  }, [patient.id, patientSessions, selectedSessionId]);
 
   React.useEffect(() => {
     let isCurrent = true;
@@ -540,6 +553,11 @@ function App() {
               const nextGroup = groups.find((group) => group.id === groupId);
               if (nextGroup?.patients[0]) {
                 setSelectedPatientId(nextGroup.patients[0].id);
+                setSelectedSessionId(
+                  nextGroup.patients[0].sessions?.[0]?.sessionId ??
+                    nextGroup.patients[0].incidents[0]?.id ??
+                    "",
+                );
               }
               setShowAuthzInfo(false);
             }}
@@ -551,6 +569,12 @@ function App() {
           {!isCheckingAccess && visibleAccessDecision.allowed ? (
             <>
               <PatientOverview group={selectedGroup} patient={patient} incident={incident} />
+              <SessionAggregatePanel
+                patient={patient}
+                sessions={patientSessions}
+                selectedSessionID={incident.sessionId ?? incident.id}
+                onSelectSession={setSelectedSessionId}
+              />
               <IncidentCharts incident={incident} />
               <Tables incident={incident} />
             </>
@@ -779,6 +803,69 @@ function MetricTile({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
+  );
+}
+
+function SessionAggregatePanel({
+  patient,
+  sessions,
+  selectedSessionID,
+  onSelectSession,
+}: {
+  patient: Patient;
+  sessions: PainIncident[];
+  selectedSessionID: string;
+  onSelectSession: (sessionID: string) => void;
+}) {
+  const painScores = sessions.map((session) => session.activation.triggerScore).filter(Number.isFinite);
+  const adjustedScores = sessions.map((session) => session.survey.adjustedGpmScore).filter(Number.isFinite);
+  const averagePain = painScores.length
+    ? Math.round((painScores.reduce((sum, value) => sum + value, 0) / painScores.length) * 100)
+    : 0;
+  const maxAdjusted = adjustedScores.length ? Math.max(...adjustedScores) : 0;
+  const completedCount = sessions.filter((session) => session.survey.status === "completed").length;
+
+  return (
+    <Card variant="default" className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <Card.Header className="flex-row items-start justify-between gap-3">
+        <div>
+          <Card.Title className="text-base">Patient Sessions</Card.Title>
+          <Card.Description>{patient.name} aggregate across watch-triggered sessions</Card.Description>
+        </div>
+        <Chip color="success" size="sm" variant="soft">
+          <Chip.Label>{sessions.length} sessions</Chip.Label>
+        </Chip>
+      </Card.Header>
+      <Card.Content className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MetricTile label="Sessions" value={`${sessions.length}`} />
+          <MetricTile label="Avg pain" value={`${averagePain}%`} />
+          <MetricTile label="Max GPM adjusted" value={`${maxAdjusted}/100`} />
+          <MetricTile label="Completed surveys" value={`${completedCount}`} />
+        </div>
+        <div className="grid gap-2">
+          {sessions.map((session) => {
+            const sessionID = session.sessionId ?? session.id;
+            const selected = sessionID === selectedSessionID;
+            return (
+              <button
+                key={sessionID}
+                type="button"
+                className={`rounded-md border px-3 py-2 text-left text-sm ${
+                  selected ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-800"
+                }`}
+                onClick={() => onSelectSession(sessionID)}
+              >
+                <span className="font-medium">{new Date(session.startedAt).toLocaleString()}</span>
+                <span className="ml-2 opacity-75">
+                  pain {Math.round(session.activation.triggerScore * 100)}% · GPM {session.survey.adjustedGpmScore}/100 · {session.survey.status}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Card.Content>
+    </Card>
   );
 }
 

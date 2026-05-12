@@ -3,6 +3,7 @@ const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
+const db = admin.firestore();
 
 const PROMPTOPINION_API_KEY = defineSecret("PROMPTOPINION_API_KEY");
 const PROMPTOPINION_FHIR_BASE_URL = defineSecret("PROMPTOPINION_FHIR_BASE_URL");
@@ -264,6 +265,29 @@ function sendJson(res, status, body) {
   res.status(status).set("Content-Type", "application/json").send(JSON.stringify(body));
 }
 
+function cleanForFirestore(value) {
+  if (Array.isArray(value)) {
+    return value.map(cleanForFirestore);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, entryValue]) => entryValue !== undefined)
+        .map(([key, entryValue]) => [key, cleanForFirestore(entryValue)]),
+    );
+  }
+  return value;
+}
+
+function safeId(value, prefix = "id") {
+  return String(value || `${prefix}-${Date.now().toString(36)}`)
+    .trim()
+    .replace(/[^A-Za-z0-9.-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120) || `${prefix}-${Date.now().toString(36)}`;
+}
+
 function secretValue(secret) {
   try {
     return secret.value();
@@ -280,12 +304,62 @@ function authorizedByApiKey(req) {
   return apiKey === expected || bearer === `Bearer ${expected}`;
 }
 
-function groupCanReadPatient(groupId, patientId) {
-  const patient = registry.patients.find((candidate) => candidate.id === patientId);
+async function loadPatientsFromFirestore() {
+  const snapshot = await db.collection("patients").orderBy("createdAt", "desc").get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+async function loadSessionsForPatient(patientId) {
+  const snapshot = await db
+    .collection("patients")
+    .doc(patientId)
+    .collection("sessions")
+    .orderBy("startedAt", "desc")
+    .limit(50)
+    .get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+async function loadAllPatients() {
+  try {
+    const patients = await loadPatientsFromFirestore();
+    if (patients.length) return patients;
+    await ensureSeedData();
+    const seededPatients = await loadPatientsFromFirestore();
+    if (seededPatients.length) return seededPatients;
+  } catch (error) {
+    console.warn("patient_firestore_read_failed", error.message);
+  }
+  return registry.patients;
+}
+
+async function groupCanReadPatient(groupId, patientId) {
+  const patients = await loadAllPatients();
+  const patient = patients.find((candidate) => candidate.id === patientId);
   return Boolean(patient?.assignedGroupIds.includes(groupId));
 }
 
-function buildGroupsPayload() {
+async function buildGroupsPayload() {
+  const patients = await loadAllPatients();
+  const patientsWithSessions = await Promise.all(
+    patients.map(async (patient) => {
+      let sessions = [];
+      try {
+        sessions = await loadSessionsForPatient(patient.id);
+      } catch (error) {
+        console.warn("session_firestore_read_failed", error.message);
+      }
+      if (!sessions.length && patient.id === TEST_PATIENT_ID) {
+        sessions = [seedSession];
+      }
+      return {
+        ...patient,
+        sessions,
+        incidents: sessions,
+      };
+    }),
+  );
+
   return registry.doctors.map((doctor) => ({
     id: doctor.groupId,
     name: doctor.groupName,
@@ -294,32 +368,42 @@ function buildGroupsPayload() {
       name: doctor.name,
       role: doctor.role,
     },
-    patients: registry.patients
-      .filter((patient) => doctor.patientIds.includes(patient.id))
+    patients: patientsWithSessions
+      .filter((patient) => patient.assignedGroupIds?.includes(doctor.groupId))
       .map((patient) => ({
         id: patient.id,
         fhirPatientId: patient.fhirPatientId,
         name: patient.name,
-        age: patient.age,
+        age: patient.age ?? null,
         assignedGroupIds: patient.assignedGroupIds,
-        sessions: patient.id === TEST_PATIENT_ID ? [seedSession] : [],
-        incidents: patient.id === TEST_PATIENT_ID ? [seedIncident] : [],
+        sessions: patient.sessions,
+        incidents: patient.incidents,
       })),
   }));
 }
 
-function patientHistory(patientId) {
-  const patient = registry.patients.find((candidate) => candidate.id === patientId);
+async function patientHistory(patientId) {
+  const patients = await loadAllPatients();
+  const patient = patients.find((candidate) => candidate.id === patientId);
   if (!patient) return null;
+  let sessions = [];
+  try {
+    sessions = await loadSessionsForPatient(patientId);
+  } catch (error) {
+    console.warn("history_session_read_failed", error.message);
+  }
+  if (!sessions.length && patient.id === TEST_PATIENT_ID) {
+    sessions = [seedSession];
+  }
   return {
     ...patient,
-    sessions: patient.id === TEST_PATIENT_ID ? [seedSession] : [],
-    incidents: patient.id === TEST_PATIENT_ID ? [seedIncident] : [],
+    sessions,
+    incidents: sessions,
   };
 }
 
-function summarizePatient(patientId) {
-  const patient = patientHistory(patientId);
+async function summarizePatient(patientId) {
+  const patient = await patientHistory(patientId);
   if (!patient) {
     return {
       patient_id: patientId,
@@ -594,20 +678,263 @@ function toolsList() {
   };
 }
 
-function visiblePatientsForGroup(groupId) {
-  return registry.patients
-    .filter((patient) => !groupId || groupCanReadPatient(groupId, patient.id))
-    .map((patient) => ({
+async function visiblePatientsForGroup(groupId) {
+  const patients = await loadAllPatients();
+  const visible = [];
+  for (const patient of patients) {
+    if (!groupId || (await groupCanReadPatient(groupId, patient.id))) {
+      visible.push(patient);
+    }
+  }
+  return visible.map((patient) => ({
       id: patient.id,
       fhir_patient_id: patient.fhirPatientId,
       name: patient.name,
-      age: patient.age,
-      session_count: patient.id === TEST_PATIENT_ID ? 1 : 0,
-      incident_count: patient.id === TEST_PATIENT_ID ? 1 : 0,
+      age: patient.age ?? null,
+      session_count: patient.sessionCount ?? (patient.id === TEST_PATIENT_ID ? 1 : 0),
+      incident_count: patient.sessionCount ?? (patient.id === TEST_PATIENT_ID ? 1 : 0),
     }));
 }
 
-function toolResult(req, name, args) {
+async function ensureSeedData() {
+  const patientRef = db.collection("patients").doc(TEST_PATIENT_ID);
+  const patientSnapshot = await patientRef.get();
+  if (!patientSnapshot.exists) {
+    await patientRef.set(
+      cleanForFirestore({
+        ...registry.patients[0],
+        createdAt: "2026-05-11T09:00:00-07:00",
+        updatedAt: nowIso(),
+        source: "seed",
+        sessionCount: 1,
+      }),
+      { merge: true },
+    );
+  }
+
+  const sessionRef = patientRef.collection("sessions").doc(seedSession.sessionId);
+  const sessionSnapshot = await sessionRef.get();
+  if (!sessionSnapshot.exists) {
+    await sessionRef.set(cleanForFirestore(seedSession), { merge: true });
+  }
+}
+
+function patientFromWatchPayload(body) {
+  const incoming = body.patient || {};
+  const id = safeId(incoming.id || body.patient_id || TEST_PATIENT_ID, "patient");
+  const firstName = incoming.first_name || incoming.firstName || incoming.given || "Watch";
+  const lastName = incoming.last_name || incoming.lastName || incoming.family || "Patient";
+  const name = incoming.display_name || incoming.displayName || `${firstName} ${lastName}`.trim();
+  return {
+    id,
+    fhirPatientId: safeId(`pain-watch-${id}`, "fhir-patient"),
+    name,
+    firstName,
+    lastName,
+    age: incoming.age ?? null,
+    createdAt: incoming.created_at || incoming.createdAt || body.created_at || nowIso(),
+    updatedAt: nowIso(),
+    source: body.source || "PainThermometerWatchApp",
+    assignedGroupIds: [DOCTOR_A_GROUP_ID],
+    deviceIds: body.device_id ? [String(body.device_id)] : [],
+    sessionCount: 0,
+  };
+}
+
+function fhirPatientResource(patient) {
+  return {
+    resourceType: "Patient",
+    active: true,
+    identifier: [
+      {
+        system: "https://pain-thermometer-po.web.app/patient-id",
+        value: patient.id,
+      },
+    ],
+    name: [
+      {
+        use: "usual",
+        text: patient.name,
+        given: patient.firstName ? [patient.firstName] : undefined,
+        family: patient.lastName || undefined,
+      },
+    ],
+    meta: {
+      tag: [
+        {
+          system: "https://pain-thermometer-po.web.app",
+          code: "painthermometer",
+          display: "PainThermometer",
+        },
+      ],
+    },
+  };
+}
+
+async function fhirPost(resourceType, resource) {
+  const baseUrl = secretValue(PROMPTOPINION_FHIR_BASE_URL).replace(/\/$/, "");
+  const apiKey = secretValue(PROMPTOPINION_API_KEY);
+  if (!baseUrl || !apiKey) return { ok: false, skipped: true };
+  const response = await fetch(`${baseUrl}/${encodeURIComponent(resourceType)}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/fhir+json",
+      "Content-Type": "application/fhir+json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(cleanForFirestore(resource)),
+  });
+  const text = await response.text();
+  let parsed = {};
+  try {
+    parsed = text ? JSON.parse(text) : {};
+  } catch {
+    parsed = {};
+  }
+  return {
+    ok: response.ok,
+    status: response.status,
+    id: response.ok ? parsed.id : undefined,
+    resource: response.ok ? parsed : undefined,
+    error: response.ok ? undefined : text.slice(0, 240),
+  };
+}
+
+async function fhirPut(resourceType, resourceId, resource) {
+  const baseUrl = secretValue(PROMPTOPINION_FHIR_BASE_URL).replace(/\/$/, "");
+  const apiKey = secretValue(PROMPTOPINION_API_KEY);
+  if (!baseUrl || !apiKey) return { ok: false, skipped: true };
+  const response = await fetch(`${baseUrl}/${encodeURIComponent(resourceType)}/${encodeURIComponent(resourceId)}`, {
+    method: "PUT",
+    headers: {
+      Accept: "application/fhir+json",
+      "Content-Type": "application/fhir+json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(cleanForFirestore(resource)),
+  });
+  const text = await response.text();
+  return {
+    ok: response.ok,
+    status: response.status,
+    id: response.ok ? resourceId : undefined,
+    error: response.ok ? undefined : text.slice(0, 240),
+  };
+}
+
+async function persistPatient(patient) {
+  let firestore = { ok: false };
+  let fhir = { ok: false };
+  try {
+    fhir = await fhirPost("Patient", fhirPatientResource(patient));
+    if (fhir.id) {
+      patient.fhirPatientId = fhir.id;
+    }
+  } catch (error) {
+    fhir = { ok: false, error: error.message };
+    console.error("patient_fhir_write_failed", error);
+  }
+  try {
+    await db.collection("patients").doc(patient.id).set(cleanForFirestore(patient), { merge: true });
+    firestore = { ok: true };
+  } catch (error) {
+    firestore = { ok: false, error: error.message };
+    console.error("patient_firestore_write_failed", error);
+  }
+  return { firestore, fhir };
+}
+
+function scoreValue(body) {
+  return Number(
+    body.score?.pain_likelihood_0_1 ??
+      body.score?.painLikelihood01 ??
+      (body.score?.pain_score_0_100 !== undefined ? body.score.pain_score_0_100 / 100 : undefined) ??
+      body.activation?.triggerScore ??
+      0.78,
+  );
+}
+
+function sessionFromPainTrigger(body, payload, patientId) {
+  const triggerScore = scoreValue(body);
+  const startedAt = body.triggered_at || body.triggeredAt || nowIso();
+  return {
+    id: payload.session_id,
+    sessionId: payload.session_id,
+    sessionType: "pain_incident",
+    patientId,
+    clinicianGroupId: body.doctor_group_id || body.doctorGroupID || DOCTOR_A_GROUP_ID,
+    startedAt,
+    durationMinutes: 0,
+    sourceDevice: body.source || "PainThermometer Watch PoC",
+    activation: {
+      positiveWindows: body.activation_positive_count ?? body.activationPositiveCount ?? null,
+      windowCount: body.activation_window_count ?? body.activationWindowCount ?? null,
+      triggerScore,
+    },
+    survey: {
+      id: `survey_${payload.session_id}`,
+      status: "in_progress",
+      finalGpmScore: 0,
+      adjustedGpmScore: 0,
+      adjustmentReason: "Questionnaire has started from a sustained watch pain trigger.",
+      questions: [],
+    },
+    biometrics: summarizeVitals(normalizeVitals(body)).sensors_present.map((sensor) => ({
+      metric: sensor.sensor,
+      sensor: sensor.sensor,
+      value: `${sensor.count} samples`,
+      zScore: 0,
+      interpretation: `${Math.round(sensor.coverage_0_1 * 100)}% coverage in trigger buffer`,
+    })),
+    scores: [
+      {
+        name: "Pain likelihood",
+        score: Math.round(triggerScore * 100),
+        scale: "0-100",
+        severity: triggerScore >= 0.65 ? "high" : "moderate",
+        note: "Watch model trigger score",
+      },
+    ],
+    chat: [
+      {
+        id: "msg_opening",
+        speaker: "assistant",
+        time: new Date(startedAt).toISOString().slice(11, 16),
+        text: payload.question,
+      },
+    ],
+    summaries: [
+      `PainThermometer opened a questionnaire after a sustained watch trigger with score ${Math.round(triggerScore * 100)}%.`,
+    ],
+    vitalsWindow: payload.vitals_window,
+    vitals: payload.vitals,
+    scoreHistory: body.score_history || [],
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  };
+}
+
+async function persistPainSession(patientId, session) {
+  try {
+    const patientRef = db.collection("patients").doc(patientId);
+    await patientRef.collection("sessions").doc(session.sessionId).set(cleanForFirestore(session), { merge: true });
+    await patientRef.set(
+      {
+        id: patientId,
+        updatedAt: nowIso(),
+        assignedGroupIds: [DOCTOR_A_GROUP_ID],
+        sessionCount: admin.firestore.FieldValue.increment(1),
+      },
+      { merge: true },
+    );
+    return { ok: true };
+  } catch (error) {
+    console.error("session_firestore_write_failed", error);
+    return { ok: false, error: error.message };
+  }
+}
+
+async function toolResult(req, name, args) {
   let payload;
   const enrichedArgs =
     name === TOOL_NAMES.continue
@@ -628,14 +955,14 @@ function toolResult(req, name, args) {
     const groupId = args.clinician_group_id || args.group_id || DOCTOR_A_GROUP_ID;
     payload = {
       clinician_group_id: groupId,
-      patients: visiblePatientsForGroup(groupId),
+      patients: await visiblePatientsForGroup(groupId),
       generated_at: nowIso(),
       prompt_opinion_context: fhirContext(req),
     };
   } else if (name === TOOL_NAMES.summarizePatientHistory) {
     const groupId = args.clinician_group_id || args.group_id || DOCTOR_A_GROUP_ID;
     const patientId = args.patient_id || fhirContext(req).patient_id || TEST_PATIENT_ID;
-    if (!groupCanReadPatient(groupId, patientId)) {
+    if (!(await groupCanReadPatient(groupId, patientId))) {
       payload = {
         clinician_group_id: groupId,
         patient_id: patientId,
@@ -647,7 +974,7 @@ function toolResult(req, name, args) {
       payload = {
         allowed: true,
         clinician_group_id: groupId,
-        ...summarizePatient(patientId),
+        ...(await summarizePatient(patientId)),
         generated_at: nowIso(),
         prompt_opinion_context: fhirContext(req),
       };
@@ -667,7 +994,7 @@ function toolResult(req, name, args) {
   };
 }
 
-function handleRpc(req, message) {
+async function handleRpc(req, message) {
   const method = message.method;
   const id = message.id;
 
@@ -704,7 +1031,7 @@ function handleRpc(req, message) {
   if (method === "tools/call") {
     const name = message.params?.name;
     const args = message.params?.arguments || {};
-    const result = toolResult(req, name, args);
+    const result = await toolResult(req, name, args);
     if (!result) {
       return jsonRpcError(id, -32602, `Unknown tool: ${name}`);
     }
@@ -744,7 +1071,7 @@ exports.mcp = onRequest(
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const messages = Array.isArray(body) ? body : [body];
-    const responses = messages.map((message) => handleRpc(req, message)).filter(Boolean);
+    const responses = (await Promise.all(messages.map((message) => handleRpc(req, message)))).filter(Boolean);
 
     if (Array.isArray(body)) {
       return sendJson(res, 200, responses);
@@ -768,8 +1095,9 @@ exports.registry = onRequest(
     return sendJson(res, 200, {
       workspace: {
         fhirConfigured: Boolean(PROMPTOPINION_API_KEY.value() && PROMPTOPINION_FHIR_BASE_URL.value()),
+        firestoreConfigured: true,
       },
-      groups: buildGroupsPayload(),
+      groups: await buildGroupsPayload(),
     });
   },
 );
@@ -789,7 +1117,7 @@ exports.authorizePatientAccess = onRequest(
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const groupId = body.clinician_group_id;
     const patientId = body.patient_id;
-    const allowed = groupCanReadPatient(groupId, patientId);
+    const allowed = await groupCanReadPatient(groupId, patientId);
     const requestPrefix = allowed ? "firebase_authz_req_a" : "firebase_authz_req_denied";
 
     return sendJson(res, allowed ? 200 : 403, {
@@ -800,7 +1128,7 @@ exports.authorizePatientAccess = onRequest(
       requestId: `${requestPrefix}_${Date.now().toString(36)}`,
       checkedAt: nowIso(),
       source: "prompt_opinion_fhir",
-      fhirPatientId: registry.patients.find((patient) => patient.id === patientId)?.fhirPatientId || patientId,
+      fhirPatientId: (await patientHistory(patientId))?.fhirPatientId || patientId,
       policy: "registered_fhir_patient_scope",
     });
   },
@@ -820,7 +1148,7 @@ exports.patientSummary = onRequest(
 
     const groupId = req.query.clinician_group_id || DOCTOR_A_GROUP_ID;
     const patientId = req.query.patient_id || TEST_PATIENT_ID;
-    if (!groupCanReadPatient(groupId, patientId)) {
+    if (!(await groupCanReadPatient(groupId, patientId))) {
       return sendJson(res, 403, {
         allowed: false,
         clinician_group_id: groupId,
@@ -832,7 +1160,7 @@ exports.patientSummary = onRequest(
     return sendJson(res, 200, {
       allowed: true,
       clinician_group_id: groupId,
-      ...summarizePatient(patientId),
+      ...(await summarizePatient(patientId)),
       generated_at: nowIso(),
     });
   },
@@ -855,13 +1183,14 @@ exports.createPatient = onRequest(
     }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    const patient = body.patient || {};
-    const patientId = patient.id || TEST_PATIENT_ID;
-    const knownPatient = registry.patients.find((candidate) => candidate.id === patientId);
+    const patient = patientFromWatchPayload(body);
+    const persistResult = await persistPatient(patient);
     return sendJson(res, 200, {
-      accepted: true,
-      patient_id: patientId,
-      fhir_patient_id: knownPatient?.fhirPatientId || `pain-watch-${String(patientId).replace(/_/g, "-")}`,
+      accepted: persistResult.firestore.ok || persistResult.fhir.ok,
+      patient_id: patient.id,
+      fhir_patient_id: patient.fhirPatientId,
+      firestore_written: persistResult.firestore.ok,
+      fhir_written: persistResult.fhir.ok,
       doctor_group_id: DOCTOR_A_GROUP_ID,
       doctor_group_name: "Doctor A",
       generated_at: nowIso(),
@@ -886,7 +1215,7 @@ exports.painTrigger = onRequest(
     }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    const triggerScore = Number(body.score?.pain ?? body.activation?.triggerScore ?? 0.78);
+    const triggerScore = scoreValue(body);
     const payload = questionnairePayload(req, {
       incident_id: body.incident_id || stableSessionId("incident"),
       local_session_id: body.local_session_id,
@@ -895,6 +1224,13 @@ exports.painTrigger = onRequest(
       buffer: body.buffer,
       score_history: body.score_history,
     });
+    const patient = body.patient ? patientFromWatchPayload(body) : null;
+    if (patient) {
+      await persistPatient(patient);
+    }
+    const patientId = patient?.id || body.patient_id || TEST_PATIENT_ID;
+    const session = sessionFromPainTrigger(body, payload, patientId);
+    const sessionPersistResult = await persistPainSession(patientId, session);
 
     return sendJson(res, 200, {
       accepted: true,
@@ -910,7 +1246,8 @@ exports.painTrigger = onRequest(
       missing_fields: payload.missing_fields,
       revised_scores: payload.revised_scores,
       doctor_group_id: DOCTOR_A_GROUP_ID,
-      patient_id: body.patient?.id || TEST_PATIENT_ID,
+      patient_id: patientId,
+      firestore_written: sessionPersistResult.ok,
     });
   },
 );
