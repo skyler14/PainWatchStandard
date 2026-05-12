@@ -26,6 +26,13 @@
 	<string>PainThermometer can record short spoken context after a pain trigger during personal debug sessions.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>PainThermometer can transcribe short spoken context after a pain trigger during personal debug sessions.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>

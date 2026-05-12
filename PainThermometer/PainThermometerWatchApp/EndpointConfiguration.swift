@@ -22,10 +22,10 @@ struct EndpointSettings: Equatable, Sendable {
     static func load() -> EndpointSettings {
         let defaults = UserDefaults.standard
         return EndpointSettings(
-            baseURLString: defaults.string(forKey: Keys.baseURLString) ?? "",
-            bearerToken: defaults.string(forKey: Keys.bearerToken) ?? "",
+            baseURLString: defaults.string(forKey: Keys.baseURLString) ?? BuiltInEndpoint.baseURLString,
+            bearerToken: defaults.string(forKey: Keys.bearerToken) ?? BuiltInEndpoint.bearerToken,
             liveFeedEnabled: defaults.object(forKey: Keys.liveFeedEnabled) as? Bool ?? false,
-            localModelEnabled: defaults.object(forKey: Keys.localModelEnabled) as? Bool ?? false
+            localModelEnabled: defaults.object(forKey: Keys.localModelEnabled) as? Bool ?? true
         )
     }
 
@@ -43,6 +43,11 @@ struct EndpointSettings: Equatable, Sendable {
         static let liveFeedEnabled = "PainThermometerLiveFeedEnabled"
         static let localModelEnabled = "PainThermometerLocalModelEnabled"
     }
+}
+
+private enum BuiltInEndpoint {
+    static let baseURLString = "https://pain-thermometer-po.web.app"
+    static let bearerToken = ""
 }
 
 private extension String {

@@ -12,18 +12,53 @@ final class RecordingViewModel: NSObject, ObservableObject {
     @Published var liveUploadEnabled: Bool
     @Published var localModelEnabled: Bool
     @Published var signalMode: SignalMode = .dummy
-    @Published var syntheticModeEnabled = false
+    @Published var syntheticModeEnabled = false {
+        didSet {
+            signalMode = syntheticModeEnabled ? .dummy : .actual
+            if syntheticModeEnabled {
+                syntheticPainBias = max(syntheticPainBias, 0.12)
+                status = "Synthetic random walk"
+                if selectedPatient != nil, !isRecording {
+                    Task { await start() }
+                }
+            } else if selectedPatient != nil {
+                syntheticPainBias = 0
+                status = isRecording ? "Live watch sensors" : "Ready"
+            }
+        }
+    }
     @Published var syntheticPainBias = 0.0
+    @Published private(set) var patientsOnDevice: [PatientProfile] = []
+    @Published private(set) var selectedPatient: PatientProfile?
+    @Published private(set) var baselineRows: [BaselineVitalRow] = []
+    @Published private(set) var baselineStatusText = "Baseline pending"
     @Published private(set) var painActivationText = "Pain 0/10"
     @Published private(set) var painActivationCount = 0
     @Published private(set) var painDetectedMode = false
     @Published private(set) var dropoutText = "Dropout none"
     @Published private(set) var bufferText = "Buffer 0/100"
     @Published private(set) var questionnaireText = "Questionnaire idle"
+    @Published private(set) var questionnaireNoticeVisible = false
+    @Published private(set) var questionnaireActive = false
+    @Published private(set) var currentQuestionText = "<text here>"
+    @Published var questionnaireResponseText = "" {
+        didSet {
+            resetQuestionSilenceCountdown()
+        }
+    }
+    @Published private(set) var selectedQuestionnaireSessionID: UUID?
+    @Published private(set) var dialogueMessages: [QuestionnaireDialogueMessage] = []
+    @Published private(set) var isRecordingQuestionnaireResponse = false
+    @Published private(set) var responseSilenceProgress = 0.0
+    @Published private(set) var questionnaireCompletionText = "0%"
+    @Published private(set) var questionnaireCanSubmit = false
     @Published private(set) var voiceStatusText = "Voice idle"
     @Published private(set) var transcriptText = ""
     @Published private(set) var sensorRows: [SensorDisplayRow] = []
     @Published private(set) var scoreRows: [ScoreDisplayRow] = []
+    @Published private(set) var sensorChartPoints: [BufferChartPoint] = []
+    @Published private(set) var scoreChartPoints: [BufferChartPoint] = []
+    @Published private(set) var questionnaireSessions: [QuestionnaireSessionSummary] = []
 
     private let healthStore = HKHealthStore()
     private let store = RunStore()
@@ -37,8 +72,17 @@ final class RecordingViewModel: NSObject, ObservableObject {
     private var workoutManager: WorkoutRecordingManager?
     private var motionRecorder: MotionRecorder?
     private var timer: Timer?
+    private var silenceTimer: Timer?
+    private var silenceProgressTimer: Timer?
+    private var silenceStartedAt: Date?
     private var startedAt: Date?
     private var activeRun: RecordingRun?
+    private var questionIndex = 0
+    private var activeQuestionnaireSessionID: UUID?
+    private var activeRemoteQuestionnaireSessionID: String?
+    private var activeQuestionnaireStartedAt: Date?
+    private var activeQuestionnaireResponseCount = 0
+    private var activeQuestionnaireCompletion = 0.0
 
     override init() {
         let settings = EndpointSettings.load()
@@ -46,6 +90,8 @@ final class RecordingViewModel: NSObject, ObservableObject {
         bearerTokenText = settings.bearerToken
         liveUploadEnabled = settings.liveFeedEnabled
         localModelEnabled = settings.localModelEnabled
+        signalMode = settings.localModelEnabled ? .actual : .dummy
+        patientsOnDevice = Self.loadPatients()
         super.init()
     }
 
@@ -59,9 +105,37 @@ final class RecordingViewModel: NSObject, ObservableObject {
             try await requestHealthAuthorization()
             await voiceController.requestSpeechAuthorization()
             voiceStatusText = voiceController.status
+            await loadBaselineVitals()
             status = "Ready"
         } catch {
             status = "Health authorization failed"
+        }
+    }
+
+    func createRandomPatientAndStart() async {
+        let patient = Self.randomPatient()
+        patientsOnDevice.insert(patient, at: 0)
+        Self.savePatients(patientsOnDevice)
+        await registerPatientWithBridge(patient)
+        await selectPatientAndStart(patient)
+    }
+
+    func selectPatientAndStart(_ patient: PatientProfile) async {
+        selectedPatient = patient
+        await registerPatientWithBridge(patient)
+        questionnaireNoticeVisible = false
+        questionnaireActive = false
+        selectedQuestionnaireSessionID = nil
+        dialogueMessages = []
+        questionIndex = 0
+        activeQuestionnaireSessionID = nil
+        activeRemoteQuestionnaireSessionID = nil
+        activeQuestionnaireCompletion = 0
+        questionnaireCompletionText = "0%"
+        questionnaireCanSubmit = false
+        currentQuestionText = Self.questionnairePrompts[0]
+        if !isRecording {
+            await start()
         }
     }
 
@@ -77,9 +151,28 @@ final class RecordingViewModel: NSObject, ObservableObject {
             bufferText = measurementBuffer.countText
             sensorRows = []
             scoreRows = []
+            sensorChartPoints = []
+            scoreChartPoints = []
             questionnaireText = "Questionnaire idle"
+            questionnaireNoticeVisible = false
+            questionnaireActive = false
+            questionnaireResponseText = ""
+            selectedQuestionnaireSessionID = nil
+            dialogueMessages = []
+            isRecordingQuestionnaireResponse = false
+            responseSilenceProgress = 0
+            questionIndex = 0
+            currentQuestionText = Self.questionnairePrompts[0]
             questionnaireTriggeredForRunID = nil
+            activeQuestionnaireSessionID = nil
+            activeQuestionnaireStartedAt = nil
+            activeQuestionnaireResponseCount = 0
             try await store.begin(run: run)
+            if syntheticModeEnabled {
+                activate(run: run, workoutManager: nil, motionRecorder: nil)
+                status = "\(selectedPatient?.displayName ?? "Patient") synthetic"
+                return
+            }
             let manager = WorkoutRecordingManager(
                 healthStore: healthStore,
                 run: run,
@@ -103,17 +196,28 @@ final class RecordingViewModel: NSObject, ObservableObject {
             )
             motion.start()
 
-            activeRun = run
-            workoutManager = manager
-            motionRecorder = motion
-            startedAt = run.startedAt
-            isRecording = true
-            status = "Run \(run.shortID)"
-            startTimer()
+            activate(run: run, workoutManager: manager, motionRecorder: motion)
+            let mode = syntheticModeEnabled ? "synthetic" : "live"
+            status = "\(selectedPatient?.displayName ?? "Patient") \(mode)"
         } catch {
-            status = "Start failed: \(error.localizedDescription)"
-            try? await store.finish(runID: run.id, endedAt: Date())
+            if syntheticModeEnabled {
+                activate(run: run, workoutManager: nil, motionRecorder: nil)
+                status = "\(selectedPatient?.displayName ?? "Patient") synthetic"
+            } else {
+                status = "Start failed: \(error.localizedDescription)"
+                try? await store.finish(runID: run.id, endedAt: Date())
+            }
         }
+    }
+
+    private func activate(run: RecordingRun, workoutManager: WorkoutRecordingManager?, motionRecorder: MotionRecorder?) {
+        activeRun = run
+        self.workoutManager = workoutManager
+        self.motionRecorder = motionRecorder
+        startedAt = run.startedAt
+        isRecording = true
+        startTimer()
+        tick()
     }
 
     func stop() async {
@@ -128,6 +232,10 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
         timer?.invalidate()
         timer = nil
+        silenceTimer?.invalidate()
+        silenceTimer = nil
+        silenceProgressTimer?.invalidate()
+        silenceProgressTimer = nil
         workoutManager = nil
         motionRecorder = nil
         activeRun = nil
@@ -205,6 +313,65 @@ final class RecordingViewModel: NSObject, ObservableObject {
         try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
     }
 
+    private func loadBaselineVitals() async {
+        let specs: [(String, String, HKQuantityTypeIdentifier, HKUnit, HKStatisticsOptions)] = [
+            ("resting_hr", "Resting HR", .restingHeartRate, HKUnit.count().unitDivided(by: .minute()), .discreteAverage),
+            ("walking_hr", "Walking HR", .walkingHeartRateAverage, HKUnit.count().unitDivided(by: .minute()), .discreteAverage),
+            ("hrv", "HRV SDNN", .heartRateVariabilitySDNN, .secondUnit(with: .milli), .discreteAverage),
+            ("spo2", "Blood oxygen", .oxygenSaturation, .percent(), .discreteAverage),
+            ("respiration", "Respiration", .respiratoryRate, HKUnit.count().unitDivided(by: .minute()), .discreteAverage),
+            ("steps", "Daily steps", .stepCount, .count(), .cumulativeSum)
+        ]
+
+        baselineStatusText = "Reading Health history"
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -30, to: end) ?? end.addingTimeInterval(-30 * 24 * 60 * 60)
+        var rows: [BaselineVitalRow] = []
+
+        for spec in specs {
+            guard let type = HKObjectType.quantityType(forIdentifier: spec.2) else { continue }
+            let value = await baselineValue(type: type, unit: spec.3, options: spec.4, start: start, end: end)
+            let valueText: String
+            if let value {
+                if spec.0 == "spo2" {
+                    valueText = String(format: "%.0f%%", value * 100)
+                } else if spec.0 == "steps" {
+                    valueText = String(format: "%.0f/day", value / 30)
+                } else {
+                    valueText = MeasurementBuffer.format(value)
+                }
+            } else {
+                valueText = "--"
+            }
+            rows.append(BaselineVitalRow(id: spec.0, label: spec.1, valueText: valueText, detailText: "30 day watch history"))
+        }
+
+        baselineRows = rows
+        baselineStatusText = rows.contains { $0.valueText != "--" } ? "Baseline from Health history" : "No baseline history yet"
+    }
+
+    private func baselineValue(
+        type: HKQuantityType,
+        unit: HKUnit,
+        options: HKStatisticsOptions,
+        start: Date,
+        end: Date
+    ) async -> Double? {
+        await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictEndDate)
+            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: options) { _, statistics, _ in
+                let quantity: HKQuantity?
+                if options.contains(.cumulativeSum) {
+                    quantity = statistics?.sumQuantity()
+                } else {
+                    quantity = statistics?.averageQuantity()
+                }
+                continuation.resume(returning: quantity?.doubleValue(for: unit))
+            }
+            healthStore.execute(query)
+        }
+    }
+
     private var endpointSettings: EndpointSettings {
         EndpointSettings(
             baseURLString: endpointURLText,
@@ -214,13 +381,30 @@ final class RecordingViewModel: NSObject, ObservableObject {
         )
     }
 
+    private func registerPatientWithBridge(_ patient: PatientProfile) async {
+        let settings = endpointSettings
+        settings.save()
+        guard settings.uploadConfiguration.baseURL != nil else { return }
+        do {
+            let client = UploadClient(configuration: settings.uploadConfiguration)
+            guard let response = try await client.createPatient(patient, deviceID: DeviceIdentity.current) else { return }
+            status = response.accepted ? "Patient linked to Doctor A" : "Patient link rejected"
+        } catch {
+            status = "Patient link retry later"
+        }
+    }
+
     private func handle(sample: SensorSampleRow) {
         guard let run = activeRun else { return }
+        if syntheticModeEnabled && sample.source != "synthetic_random_walk" {
+            return
+        }
         let settings = endpointSettings
         settings.save()
         measurementBuffer.append(sample)
         bufferText = measurementBuffer.countText
         sensorRows = measurementBuffer.sensorRows()
+        sensorChartPoints = measurementBuffer.chartPoints()
 
         Task {
             if let window = await featureWindowBuilder.append(sample) {
@@ -272,8 +456,18 @@ final class RecordingViewModel: NSObject, ObservableObject {
         painActivationText = snapshot.isActive
             ? "Pain detected \(snapshot.positiveCount)/\(snapshot.windowCount)"
             : "Pain \(snapshot.positiveCount)/\(snapshot.windowCount)"
-        questionnaireText = snapshot.isActive ? "Questionnaire trigger ready" : "Questionnaire idle"
+        if questionnaireActive {
+            questionnaireText = "Questionnaire active"
+        } else if questionnaireNoticeVisible || snapshot.isActive {
+            questionnaireText = "Questionnaire ready"
+        } else {
+            questionnaireText = "Questionnaire idle"
+        }
         scoreRows = Self.scoreRows(from: score, activationText: painActivationText)
+        scoreChartPoints.append(Self.scoreChartPoint(from: score))
+        if scoreChartPoints.count > 100 {
+            scoreChartPoints.removeFirst(scoreChartPoints.count - 100)
+        }
         apply(dropoutSignals: score.dropoutSignals ?? [])
         if snapshot.isActive {
             submitPainTriggerIfNeeded(score: score, snapshot: snapshot)
@@ -309,36 +503,292 @@ final class RecordingViewModel: NSObject, ObservableObject {
     }
 
     func speakCurrentQuestion() {
-        let text = questionnaireText == "Questionnaire trigger ready" ? Self.initialPainPrompt : questionnaireText
-        voiceController.speak(text)
+        guard selectedQuestionnaireSessionID != nil else { return }
+        voiceController.speak(currentQuestionText)
         voiceStatusText = voiceController.status
     }
 
-    func startListening() {
-        voiceController.startListeningPlaceholder()
+    func startQuestionnaireResponseRecording() {
+        guard selectedQuestionnaireSessionID != nil else { return }
+        isRecordingQuestionnaireResponse = true
+        responseSilenceProgress = 1
+        questionnaireResponseText = ""
+        #if os(watchOS)
+        voiceController.startDictation(
+            onTranscript: { [weak self] transcript in
+                guard let self else { return }
+                self.questionnaireResponseText = transcript
+                self.transcriptText = transcript
+                self.voiceStatusText = self.voiceController.status
+            },
+            onFinished: { [weak self] in
+                self?.finalizeQuestionnaireResponse()
+            }
+        )
         voiceStatusText = voiceController.status
         transcriptText = voiceController.transcript
+        #else
+        voiceController.startListening { [weak self] transcript in
+            guard let self else { return }
+            self.questionnaireResponseText = transcript
+            self.transcriptText = transcript
+            self.voiceStatusText = self.voiceController.status
+        }
+        voiceStatusText = voiceController.status
+        transcriptText = voiceController.transcript
+        startSilenceCountdown()
+        #endif
+    }
+
+    func stopQuestionnaireResponseRecording() {
+        finalizeQuestionnaireResponse()
+    }
+
+    func submitActiveQuestionnaire() {
+        guard questionnaireCanSubmit,
+              let activeQuestionnaireSessionID,
+              let activeRemoteQuestionnaireSessionID else { return }
+        let transcript = dialogueMessages
+        let settings = endpointSettings
+        Task {
+            do {
+                let client = UploadClient(configuration: settings.uploadConfiguration)
+                guard let response = try await client.submitQuestionnaire(
+                    sessionID: activeRemoteQuestionnaireSessionID,
+                    localSessionID: activeQuestionnaireSessionID,
+                    transcript: transcript
+                ) else { return }
+                await MainActor.run {
+                    if response.accepted {
+                        self.questionnaireText = response.completed == true ? "Questionnaire submitted" : "Questionnaire saved"
+                        self.questionnaireActive = response.completed != true
+                        self.questionnaireCanSubmit = response.completed != true
+                        self.activeQuestionnaireCompletion = response.completion01 ?? self.activeQuestionnaireCompletion
+                        self.questionnaireCompletionText = Self.percent(self.activeQuestionnaireCompletion)
+                        self.recordQuestionnaireSessionSummary()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.questionnaireText = "Submit retry later"
+                }
+            }
+        }
+    }
+
+    func openQuestionnaireSession(_ session: QuestionnaireSessionSummary) {
+        selectedQuestionnaireSessionID = session.id
+        activeQuestionnaireSessionID = session.id
+        activeRemoteQuestionnaireSessionID = session.remoteSessionID
+        activeQuestionnaireStartedAt = activeQuestionnaireStartedAt ?? Date()
+        activeQuestionnaireCompletion = completionValue(from: session.completionText)
+        questionnaireCanSubmit = session.canSubmit
+        questionnaireCompletionText = session.completionText
+        questionnaireNoticeVisible = false
+        questionnaireActive = true
+        questionIndex = 0
+        currentQuestionText = Self.questionnairePrompts[questionIndex]
+        questionnaireResponseText = ""
+        dialogueMessages = [
+            QuestionnaireDialogueMessage(
+                speaker: .system,
+                text: currentQuestionText,
+                timeText: Self.shortTimeFormatter.string(from: Date())
+            )
+        ]
+        questionnaireText = "Questionnaire active"
+        speakCurrentQuestion()
+    }
+
+    func dismissQuestionnaireSession(_ session: QuestionnaireSessionSummary) {
+        guard selectedQuestionnaireSessionID == session.id else { return }
+        selectedQuestionnaireSessionID = nil
+        questionnaireActive = false
+        dialogueMessages = []
+        questionnaireResponseText = ""
+        isRecordingQuestionnaireResponse = false
+        voiceController.stopListening()
+        voiceStatusText = voiceController.status
+        responseSilenceProgress = 0
+        silenceTimer?.invalidate()
+        silenceTimer = nil
+        silenceProgressTimer?.invalidate()
+        silenceProgressTimer = nil
+        questionnaireText = questionnaireSessions.isEmpty ? "Questionnaire idle" : "Questionnaire ready"
+    }
+
+    func removeQuestionnaireSession(_ session: QuestionnaireSessionSummary) {
+        dismissQuestionnaireSession(session)
+        questionnaireSessions.removeAll { $0.id == session.id }
+        if activeQuestionnaireSessionID == session.id {
+            activeQuestionnaireSessionID = nil
+            activeRemoteQuestionnaireSessionID = nil
+            activeQuestionnaireStartedAt = nil
+            activeQuestionnaireResponseCount = 0
+            activeQuestionnaireCompletion = 0
+            questionnaireCompletionText = "0%"
+            questionnaireCanSubmit = false
+        }
+        questionnaireNoticeVisible = !questionnaireSessions.isEmpty
+        questionnaireText = questionnaireSessions.isEmpty ? "Questionnaire idle" : "Questionnaire ready"
+    }
+
+    func startQuestionnaireNow() {
+        if let first = questionnaireSessions.first {
+            openQuestionnaireSession(first)
+        }
+    }
+
+    func advanceQuestionAfterSilence() {
+        finalizeQuestionnaireResponse()
+    }
+
+    private func finalizeQuestionnaireResponse() {
+        guard questionnaireActive else { return }
+        silenceTimer?.invalidate()
+        silenceTimer = nil
+        silenceProgressTimer?.invalidate()
+        silenceProgressTimer = nil
+        isRecordingQuestionnaireResponse = false
+        voiceController.stopListening()
+        voiceStatusText = voiceController.status
+        responseSilenceProgress = 0
+
+        let response = questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !response.isEmpty {
+            activeQuestionnaireResponseCount += 1
+            dialogueMessages.append(
+                QuestionnaireDialogueMessage(
+                    speaker: .patient,
+                    text: response,
+                    timeText: Self.shortTimeFormatter.string(from: Date())
+                )
+            )
+        }
+        questionnaireResponseText = ""
+        recordQuestionnaireSessionSummary()
+        if let activeQuestionnaireSessionID, let activeRemoteQuestionnaireSessionID, !response.isEmpty {
+            Task {
+                await continueRemoteQuestionnaire(
+                    remoteSessionID: activeRemoteQuestionnaireSessionID,
+                    localSessionID: activeQuestionnaireSessionID,
+                    response: response
+                )
+            }
+        } else {
+            appendNextLocalQuestion()
+        }
+    }
+
+    private func appendNextLocalQuestion() {
+        questionIndex = min(questionIndex + 1, Self.questionnairePrompts.count - 1)
+        currentQuestionText = Self.questionnairePrompts[questionIndex]
+        activeQuestionnaireCompletion = min(1, activeQuestionnaireCompletion + 0.12)
+        questionnaireCanSubmit = activeQuestionnaireCompletion >= 0.8
+        questionnaireCompletionText = Self.percent(activeQuestionnaireCompletion)
+        recordQuestionnaireSessionSummary()
+        dialogueMessages.append(
+            QuestionnaireDialogueMessage(
+                speaker: .system,
+                text: currentQuestionText,
+                timeText: Self.shortTimeFormatter.string(from: Date())
+            )
+        )
+        speakCurrentQuestion()
+    }
+
+    private func continueRemoteQuestionnaire(remoteSessionID: String, localSessionID: UUID, response: String) async {
+        do {
+            let client = UploadClient(configuration: endpointSettings.uploadConfiguration)
+            guard let result = try await client.continueQuestionnaire(
+                sessionID: remoteSessionID,
+                localSessionID: localSessionID,
+                response: response
+            ) else {
+                await MainActor.run { self.appendNextLocalQuestion() }
+                return
+            }
+            await MainActor.run {
+                self.apply(questionnaireResponse: result, remoteSessionID: remoteSessionID)
+            }
+        } catch {
+            await MainActor.run {
+                self.questionnaireText = "Questionnaire offline"
+                self.appendNextLocalQuestion()
+            }
+        }
+    }
+
+    private func apply(painTriggerResponse response: PainTriggerResponse) {
+        activeRemoteQuestionnaireSessionID = response.questionnaireSessionID
+        activeQuestionnaireCompletion = response.completion01 ?? activeQuestionnaireCompletion
+        questionnaireCanSubmit = response.canSubmit ?? (activeQuestionnaireCompletion >= 0.8)
+        questionnaireCompletionText = Self.percent(activeQuestionnaireCompletion)
+        let next = response.question?.text ?? response.nextQuestion
+        if let next, !next.isEmpty {
+            currentQuestionText = next
+        }
+        recordQuestionnaireSessionSummary()
+    }
+
+    private func apply(questionnaireResponse response: ContinueQuestionnaireResponse, remoteSessionID: String) {
+        activeRemoteQuestionnaireSessionID = remoteSessionID
+        activeQuestionnaireCompletion = response.completion01 ?? activeQuestionnaireCompletion
+        questionnaireCanSubmit = response.canSubmit ?? (activeQuestionnaireCompletion >= 0.8)
+        questionnaireCompletionText = Self.percent(activeQuestionnaireCompletion)
+        let next = response.question?.text ?? response.nextQuestion ?? Self.questionnairePrompts[min(questionIndex + 1, Self.questionnairePrompts.count - 1)]
+        currentQuestionText = next
+        questionnaireText = questionnaireCanSubmit ? "Questionnaire ready to submit" : "Questionnaire active"
+        recordQuestionnaireSessionSummary()
+        dialogueMessages.append(
+            QuestionnaireDialogueMessage(
+                speaker: .system,
+                text: currentQuestionText,
+                timeText: Self.shortTimeFormatter.string(from: Date())
+            )
+        )
+        speakCurrentQuestion()
     }
 
     private func submitPainTriggerIfNeeded(score: ScoreResult, snapshot: PainActivationSnapshot) {
         guard let run = activeRun, questionnaireTriggeredForRunID != run.id else { return }
         questionnaireTriggeredForRunID = run.id
-        questionnaireText = Self.initialPainPrompt
-        voiceController.speak(Self.initialPainPrompt)
-        voiceStatusText = voiceController.status
+        createQuestionnaireSessionCard()
+        questionnaireNoticeVisible = true
+        questionnaireText = "Questionnaire ready"
 
         let payload = PainTriggerPayload(
             runID: run.id,
             deviceID: run.deviceID,
+            patient: selectedPatient,
+            doctorGroupID: "doctor_a",
+            doctorGroupName: "Doctor A",
             triggeredAt: Date(),
             activationPositiveCount: snapshot.positiveCount,
             activationWindowCount: snapshot.windowCount,
             score: score,
+            scoreHistory: scoreChartPoints.suffix(100).map(Self.scoreHistoryPoint(from:)),
             buffer: measurementBuffer.payloadSamples(),
-            suggestedPrompt: Self.initialPainPrompt
+            suggestedPrompt: Self.questionnairePrompts[0]
         )
-        _ = payload
-        status = "Pain trigger local only"
+        let settings = endpointSettings
+        Task {
+            do {
+                let client = UploadClient(configuration: settings.uploadConfiguration)
+                guard let response = try await client.submitPainTrigger(payload: payload) else {
+                    await MainActor.run { self.status = "Pain trigger local only" }
+                    return
+                }
+                await MainActor.run {
+                    self.apply(painTriggerResponse: response)
+                    self.status = response.accepted ? "Pain trigger sent" : "Pain trigger rejected"
+                }
+            } catch {
+                await MainActor.run {
+                    self.status = "Pain trigger retry later"
+                }
+            }
+        }
     }
 
     private func dummyScore(for window: FeatureWindow) -> ScoreResult {
@@ -388,6 +838,89 @@ final class RecordingViewModel: NSObject, ObservableObject {
         }
     }
 
+    private func resetQuestionSilenceCountdown() {
+        guard isRecordingQuestionnaireResponse else { return }
+        startSilenceCountdown()
+    }
+
+    private func startSilenceCountdown() {
+        silenceTimer?.invalidate()
+        silenceProgressTimer?.invalidate()
+        guard questionnaireActive else { return }
+        silenceStartedAt = Date()
+        responseSilenceProgress = 1
+        silenceTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.finalizeQuestionnaireResponse()
+            }
+        }
+        silenceProgressTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, let silenceStartedAt = self.silenceStartedAt else { return }
+                let elapsed = Date().timeIntervalSince(silenceStartedAt)
+                self.responseSilenceProgress = max(0, 1 - elapsed / 10)
+            }
+        }
+    }
+
+    private func createQuestionnaireSessionCard() {
+        let sessionID = UUID()
+        activeQuestionnaireSessionID = sessionID
+        activeRemoteQuestionnaireSessionID = nil
+        activeQuestionnaireStartedAt = Date()
+        activeQuestionnaireResponseCount = 0
+        activeQuestionnaireCompletion = 0
+        questionnaireCompletionText = "0%"
+        questionnaireCanSubmit = false
+        recordQuestionnaireSessionSummary()
+    }
+
+    private func recordQuestionnaireSessionSummary() {
+        guard let activeQuestionnaireSessionID else { return }
+        let formatter = Self.shortTimeFormatter
+        let startedAt = activeQuestionnaireStartedAt ?? Date()
+        let painText = painActivationText.replacingOccurrences(of: "Pain detected ", with: "")
+        let summary = QuestionnaireSessionSummary(
+            id: activeQuestionnaireSessionID,
+            remoteSessionID: activeRemoteQuestionnaireSessionID,
+            startedAtText: formatter.string(from: startedAt),
+            painText: painText,
+            responseCount: activeQuestionnaireResponseCount,
+            completionText: questionnaireCompletionText,
+            canSubmit: questionnaireCanSubmit
+        )
+        questionnaireSessions.removeAll { $0.id == activeQuestionnaireSessionID }
+        questionnaireSessions.insert(summary, at: 0)
+    }
+
+    private func completionValue(from text: String) -> Double {
+        let valueText = text.replacingOccurrences(of: "%", with: "")
+        return (Double(valueText) ?? 0) / 100
+    }
+
+    private static func loadPatients() -> [PatientProfile] {
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: patientStoreKey),
+           let patients = try? JSONDecoder.painThermometer.decode([PatientProfile].self, from: data),
+           !patients.isEmpty {
+            return patients
+        }
+        let seeded = [PatientProfile(firstName: "Taylor", lastName: "Morgan")]
+        savePatients(seeded)
+        return seeded
+    }
+
+    private static func savePatients(_ patients: [PatientProfile]) {
+        guard let data = try? JSONEncoder.painThermometer.encode(patients) else { return }
+        UserDefaults.standard.set(data, forKey: patientStoreKey)
+    }
+
+    private static func randomPatient() -> PatientProfile {
+        let first = ["Avery", "Jordan", "Riley", "Casey", "Morgan", "Quinn", "Jamie", "Taylor"].randomElement() ?? "Avery"
+        let last = ["Hayes", "Reed", "Parker", "Lane", "Brooks", "Ellis", "Stone", "Cole"].randomElement() ?? "Hayes"
+        return PatientProfile(firstName: first, lastName: last)
+    }
+
     private static func scoreRows(from score: ScoreResult, activationText: String) -> [ScoreDisplayRow] {
         var rows: [ScoreDisplayRow] = [
             ScoreDisplayRow(id: "activation", label: "Activation", valueText: activationText)
@@ -421,5 +954,40 @@ final class RecordingViewModel: NSObject, ObservableObject {
         String(format: "%.0f%%", value * 100)
     }
 
-    private static let initialPainPrompt = "What happened around when the pain started?"
+    private static func scoreChartPoint(from score: ScoreResult) -> BufferChartPoint {
+        let value = score.painLikelihood01 ?? ((score.painScore0100 ?? 0) / 100)
+        let id = UUID()
+        return BufferChartPoint(
+            id: id,
+            sensor: "pain_score",
+            label: "P",
+            value: value,
+            normalizedValue: min(1, max(0, value)),
+            timeText: shortTimeFormatter.string(from: score.windowEndUTC ?? Date())
+        )
+    }
+
+    private static func scoreHistoryPoint(from point: BufferChartPoint) -> ScoreHistoryPoint {
+        ScoreHistoryPoint(
+            id: point.id,
+            scoreName: point.sensor,
+            value: point.value,
+            normalizedValue: point.normalizedValue,
+            timeText: point.timeText,
+            capturedAt: nil
+        )
+    }
+
+    private static let shortTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
+
+    private static let patientStoreKey = "PainThermometerPatientsOnDevice"
+    private static let questionnairePrompts = [
+        "<text here>",
+        "<text here>",
+        "<text here>"
+    ]
 }

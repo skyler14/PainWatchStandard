@@ -15,6 +15,15 @@ struct ScoreDisplayRow: Identifiable, Sendable {
     let valueText: String
 }
 
+struct BufferChartPoint: Identifiable, Sendable {
+    let id: UUID
+    let sensor: String
+    let label: String
+    let value: Double
+    let normalizedValue: Double
+    let timeText: String
+}
+
 struct BufferedMeasurementPayload: Codable, Sendable {
     let sampleID: UUID
     let sampleTimeUTC: Date
@@ -159,6 +168,24 @@ struct MeasurementBuffer: Sendable {
             .map(\.payload)
     }
 
+    func chartPoints(limit: Int = 100) -> [BufferChartPoint] {
+        let ordered = samples.sorted { $0.sampleTimeUTC < $1.sampleTimeUTC }.suffix(limit)
+        let values = ordered.map(\.scalarValue)
+        let minValue = values.min() ?? 0
+        let maxValue = values.max() ?? 1
+        let range = max(0.0001, maxValue - minValue)
+        return ordered.map { sample in
+            BufferChartPoint(
+                id: sample.id,
+                sensor: sample.sensor,
+                label: Self.sensorShortLabel(sample.sensor),
+                value: sample.scalarValue,
+                normalizedValue: (sample.scalarValue - minValue) / range,
+                timeText: Self.timeFormatter.string(from: sample.sampleTimeUTC)
+            )
+        }
+    }
+
     private mutating func pruneIfNeeded() {
         while samples.count > capacity {
             let candidates = rankedCandidates()
@@ -240,6 +267,22 @@ struct MeasurementBuffer: Sendable {
             return String(format: "%.1f", value)
         }
         return String(format: "%.2f", value)
+    }
+
+    static func sensorShortLabel(_ sensor: String) -> String {
+        switch sensor {
+        case "heart_rate": return "HR"
+        case "respiratory_rate": return "RR"
+        case "oxygen_saturation": return "O2"
+        case "wrist_temperature", "body_temperature": return "T"
+        case "accelerometer", "device_motion_acceleration": return "A"
+        case "gyroscope": return "G"
+        case "active_energy": return "E"
+        case "basal_energy": return "B"
+        case "distance_walking_running": return "D"
+        default:
+            return String(sensor.prefix(2)).uppercased()
+        }
     }
 
     private static let timeFormatter: DateFormatter = {

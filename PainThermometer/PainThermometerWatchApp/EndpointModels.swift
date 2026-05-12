@@ -90,15 +90,53 @@ struct HistoricalUploadPayload: Codable, Sendable {
     }
 }
 
+struct CreatePatientRequest: Codable, Sendable {
+    let schemaVersion = 1
+    let source = "PainThermometerWatchApp"
+    let doctorGroupID = "doctor_a"
+    let doctorGroupName = "Doctor A"
+    let patient: PatientProfile
+    let deviceID: UUID
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion = "schema_version"
+        case source
+        case doctorGroupID = "doctor_group_id"
+        case doctorGroupName = "doctor_group_name"
+        case patient
+        case deviceID = "device_id"
+        case createdAt = "created_at"
+    }
+}
+
+struct CreatePatientResponse: Codable, Sendable {
+    let accepted: Bool
+    let patientID: String?
+    let fhirPatientID: String?
+    let doctorGroupID: String?
+
+    enum CodingKeys: String, CodingKey {
+        case accepted
+        case patientID = "patient_id"
+        case fhirPatientID = "fhir_patient_id"
+        case doctorGroupID = "doctor_group_id"
+    }
+}
+
 struct PainTriggerPayload: Codable, Sendable {
     let schemaVersion = 1
     let source = "PainThermometerWatchApp"
     let runID: UUID
     let deviceID: UUID
+    let patient: PatientProfile?
+    let doctorGroupID: String
+    let doctorGroupName: String
     let triggeredAt: Date
     let activationPositiveCount: Int
     let activationWindowCount: Int
     let score: ScoreResult
+    let scoreHistory: [ScoreHistoryPoint]
     let buffer: [BufferedMeasurementPayload]
     let suggestedPrompt: String
 
@@ -107,28 +145,138 @@ struct PainTriggerPayload: Codable, Sendable {
         case source
         case runID = "run_id"
         case deviceID = "device_id"
+        case patient
+        case doctorGroupID = "doctor_group_id"
+        case doctorGroupName = "doctor_group_name"
         case triggeredAt = "triggered_at"
         case activationPositiveCount = "activation_positive_count"
         case activationWindowCount = "activation_window_count"
         case score
+        case scoreHistory = "score_history"
         case buffer
         case suggestedPrompt = "suggested_prompt"
+    }
+}
+
+struct ScoreHistoryPoint: Codable, Identifiable, Sendable {
+    let id: UUID
+    let scoreName: String
+    let value: Double
+    let normalizedValue: Double
+    let timeText: String
+    let capturedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case scoreName = "score_name"
+        case value
+        case normalizedValue = "normalized_value"
+        case timeText = "time_text"
+        case capturedAt = "captured_at"
     }
 }
 
 struct PainTriggerResponse: Codable, Sendable {
     let accepted: Bool
     let questionnaireSessionID: String?
+    let question: QuestionnaireQuestion?
     let nextQuestion: String?
     let missingFields: [String]?
+    let completion01: Double?
+    let canSubmit: Bool?
     let revisedScores: ScoreResult?
 
     enum CodingKeys: String, CodingKey {
         case accepted
         case questionnaireSessionID = "questionnaire_session_id"
+        case question
         case nextQuestion = "next_question"
         case missingFields = "missing_fields"
+        case completion01 = "completion_0_1"
+        case canSubmit = "can_submit"
         case revisedScores = "revised_scores"
+    }
+}
+
+struct QuestionnaireQuestion: Codable, Sendable {
+    let id: String?
+    let text: String
+    let inputType: String?
+    let targetFields: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case text
+        case inputType = "input_type"
+        case targetFields = "target_fields"
+    }
+}
+
+struct ContinueQuestionnairePayload: Codable, Sendable {
+    let schemaVersion = 1
+    let source = "PainThermometerWatchApp"
+    let questionnaireSessionID: String
+    let localSessionID: UUID
+    let response: String
+    let submittedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion = "schema_version"
+        case source
+        case questionnaireSessionID = "questionnaire_session_id"
+        case localSessionID = "local_session_id"
+        case response
+        case submittedAt = "submitted_at"
+    }
+}
+
+struct ContinueQuestionnaireResponse: Codable, Sendable {
+    let accepted: Bool
+    let question: QuestionnaireQuestion?
+    let nextQuestion: String?
+    let missingFields: [String]?
+    let completion01: Double?
+    let canSubmit: Bool?
+    let revisedScores: ScoreResult?
+
+    enum CodingKeys: String, CodingKey {
+        case accepted
+        case question
+        case nextQuestion = "next_question"
+        case missingFields = "missing_fields"
+        case completion01 = "completion_0_1"
+        case canSubmit = "can_submit"
+        case revisedScores = "revised_scores"
+    }
+}
+
+struct SubmitQuestionnairePayload: Codable, Sendable {
+    let schemaVersion = 1
+    let source = "PainThermometerWatchApp"
+    let questionnaireSessionID: String
+    let localSessionID: UUID
+    let transcript: [QuestionnaireDialogueMessage]
+    let submittedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion = "schema_version"
+        case source
+        case questionnaireSessionID = "questionnaire_session_id"
+        case localSessionID = "local_session_id"
+        case transcript
+        case submittedAt = "submitted_at"
+    }
+}
+
+struct SubmitQuestionnaireResponse: Codable, Sendable {
+    let accepted: Bool
+    let completed: Bool?
+    let completion01: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case accepted
+        case completed
+        case completion01 = "completion_0_1"
     }
 }
 

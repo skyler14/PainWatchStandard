@@ -90,6 +90,60 @@ struct RunEndRow: Codable, Sendable {
     }
 }
 
+struct PatientProfile: Codable, Identifiable, Equatable, Sendable {
+    let id: UUID
+    var firstName: String
+    var lastName: String
+    var createdAt: Date
+
+    init(id: UUID = UUID(), firstName: String, lastName: String, createdAt: Date = Date()) {
+        self.id = id
+        self.firstName = firstName
+        self.lastName = lastName
+        self.createdAt = createdAt
+    }
+
+    var displayName: String {
+        "\(firstName) \(lastName)"
+    }
+}
+
+struct BaselineVitalRow: Identifiable, Equatable, Sendable {
+    let id: String
+    let label: String
+    let valueText: String
+    let detailText: String
+}
+
+struct QuestionnaireSessionSummary: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let remoteSessionID: String?
+    let startedAtText: String
+    let painText: String
+    let responseCount: Int
+    let completionText: String
+    let canSubmit: Bool
+}
+
+struct QuestionnaireDialogueMessage: Identifiable, Codable, Equatable, Sendable {
+    enum Speaker: String, Codable, Sendable {
+        case system
+        case patient
+    }
+
+    let id: UUID
+    let speaker: Speaker
+    let text: String
+    let timeText: String
+
+    init(id: UUID = UUID(), speaker: Speaker, text: String, timeText: String) {
+        self.id = id
+        self.speaker = speaker
+        self.text = text
+        self.timeText = timeText
+    }
+}
+
 enum DeviceIdentity {
     static var current: UUID {
         let key = "PainThermometerDeviceID"

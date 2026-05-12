@@ -19,6 +19,9 @@ The server listens at:
 http://127.0.0.1:9010/mcp
 ```
 
+Set `PAIN_MCP_HOST=0.0.0.0` and expose the service over HTTPS when registering
+it from the Prompt Opinion web app. Keep `127.0.0.1` for local-only testing.
+
 ## Tools
 
 - `start_questionnaire`: called when the app has a sustained pain activation,
@@ -32,6 +35,20 @@ http://127.0.0.1:9010/mcp
 
 This PoC keeps questionnaire sessions in memory. A production version should
 persist sessions keyed by `run_id`, `device_id`, and trigger timestamp.
+
+## Prompt Opinion Registration
+
+1. Deploy the server so the Prompt Opinion backend can reach `/mcp`.
+2. In Prompt Opinion, go to `Configuration -> MCP Servers` and add the public
+   MCP URL.
+3. Continue through the initialize step. The server declares
+   `ai.promptopinion/fhir-context` with optional Patient, Observation, and
+   QuestionnaireResponse scopes.
+4. Enable FHIR context if this questionnaire should attach output to the active
+   patient. Prompt Opinion will pass `X-FHIR-Server-URL`,
+   `X-FHIR-Access-Token`, and `X-Patient-ID` headers on tool calls.
+5. Attach this MCP server to the BYO agent that will conduct the pain follow-up
+   dialogue.
 
 The dialogue starts with “What happened around when the pain started?” and then
 prioritizes missing or low-certainty GPM-style fields such as pain location,

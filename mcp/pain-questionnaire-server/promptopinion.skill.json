@@ -1,0 +1,73 @@
+{
+  "name": "PainThermometer GPM Follow-up",
+  "slug": "painthermometer-gpm-followup",
+  "scope": "patient",
+  "description": "Starts a conversational Geriatric Pain Measure follow-up when PainThermometer reports sustained watch pain activation.",
+  "doctor_group": {
+    "id": "doctor_a",
+    "name": "Doctor A"
+  },
+  "mcp": {
+    "url": "https://pain-thermometer-po.web.app/mcp",
+    "transport": "streamable_http",
+    "authentication": {
+      "type": "api_key",
+      "header": "x-api-key",
+      "secret_name": "PAIN_MCP_API_KEY"
+    },
+    "tools": [
+      "start_questionnaire",
+      "get_questionnaire",
+      "continue_dialogue",
+      "submit_questionnaire_answers"
+    ],
+    "extensions": {
+      "ai.promptopinion/fhir-context": {
+        "scopes": [
+          { "name": "patient/Patient.rs", "required": false },
+          { "name": "patient/Observation.rs", "required": false },
+          { "name": "patient/Observation.cu", "required": false },
+          { "name": "patient/QuestionnaireResponse.rs", "required": false },
+          { "name": "patient/QuestionnaireResponse.cu", "required": false }
+        ]
+      }
+    }
+  },
+  "watch_bridge": {
+    "base_url": "https://pain-thermometer-po.web.app",
+    "endpoints": {
+      "create_patient": "/v1/patients",
+      "pain_trigger": "/v1/pain-trigger",
+      "continue_questionnaire": "/v1/questionnaire/continue",
+      "submit_questionnaire": "/v1/questionnaire/submit"
+    }
+  },
+  "response_schema": {
+    "type": "object",
+    "required": ["question", "completion_0_1", "can_submit", "missing_fields"],
+    "properties": {
+      "question": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "input_type": { "type": "string" },
+          "target_fields": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "completion_0_1": { "type": "number", "minimum": 0, "maximum": 1 },
+      "can_submit": { "type": "boolean" },
+      "missing_fields": { "type": "array", "items": { "type": "string" } },
+      "gpm_context": { "type": "string" },
+      "gpm_items": { "type": "array", "items": { "type": "object" } },
+      "vitals_window": { "type": "object" },
+      "vitals": {
+        "type": "array",
+        "maxItems": 100,
+        "items": { "type": "object" }
+      },
+      "revised_scores": { "type": "object" }
+    }
+  }
+}

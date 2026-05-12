@@ -1,8 +1,16 @@
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from fastmcp import FastMCP
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+
+try:
+    from po_fastmcp import get_fhir_context
+except ModuleNotFoundError:
+    def get_fhir_context() -> None:
+        return None
 
 
 @dataclass
@@ -16,6 +24,7 @@ class QuestionnaireSession:
     started_at_utc: str
     pain_scores: dict = field(default_factory=dict)
     sensor_summary: dict = field(default_factory=dict)
+    prompt_opinion_context: dict = field(default_factory=dict)
     testimony: list[str] = field(default_factory=list)
     certainty: dict[str, float] = field(default_factory=dict)
     status: str = "active"
@@ -100,7 +109,7 @@ FOLLOW_UPS = {
 sessions: dict[str, QuestionnaireSession] = {}
 
 
-def register_tools(mcp: FastMCP) -> None:
+def register_tools(mcp: "FastMCP") -> None:
     mcp.add_tool(start_questionnaire)
     mcp.add_tool(get_questionnaire)
     mcp.add_tool(submit_questionnaire_answers)
@@ -117,6 +126,7 @@ def start_questionnaire(
     sensor_summary: dict | None = None,
 ) -> dict:
     """Start a questionnaire for a sustained pain activation event."""
+    fhir_context = get_fhir_context()
     session = QuestionnaireSession(
         session_id=str(uuid4()),
         run_id=run_id,
@@ -127,6 +137,7 @@ def start_questionnaire(
         started_at_utc=datetime.now(timezone.utc).isoformat(),
         pain_scores=pain_scores or {},
         sensor_summary=sensor_summary or {},
+        prompt_opinion_context=_prompt_opinion_context_payload(fhir_context),
     )
     session.certainty = _initial_certainty(session)
     sessions[session.session_id] = session
@@ -254,6 +265,21 @@ def _revised_scores(session: QuestionnaireSession) -> dict:
         "gpm_band": "mild" if adjusted < 30 else "moderate" if adjusted <= 69 else "severe",
         "testimony_count": len(session.testimony),
         "certainty": session.certainty,
+        "fhir_patient_id": session.prompt_opinion_context.get("patient_id"),
+    }
+
+
+def _prompt_opinion_context_payload(fhir_context: object | None) -> dict:
+    if fhir_context is None:
+        return {
+            "available": False,
+            "fhir_server_url": None,
+            "patient_id": None,
+        }
+    return {
+        "available": True,
+        "fhir_server_url": getattr(fhir_context, "url", None),
+        "patient_id": getattr(fhir_context, "patient_id", None),
     }
 
 

@@ -1,0 +1,77 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "promptopinion-dashboard-mock/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/mcp",
+        "function": {
+          "functionId": "mcp",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/registry",
+        "function": {
+          "functionId": "registry",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/promptopinion/authorize-patient-access",
+        "function": {
+          "functionId": "authorizePatientAccess",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/patients",
+        "function": {
+          "functionId": "createPatient",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/pain-trigger",
+        "function": {
+          "functionId": "painTrigger",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/questionnaire/continue",
+        "function": {
+          "functionId": "continueQuestionnaire",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/questionnaire/submit",
+        "function": {
+          "functionId": "submitQuestionnaire",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

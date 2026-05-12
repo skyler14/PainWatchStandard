@@ -7,6 +7,9 @@ struct UploadConfiguration {
     let liveSamplesPath: String
     let historicalImportPath: String
     let painTriggerPath: String
+    let createPatientPath: String
+    let continueQuestionnairePath: String
+    let submitQuestionnairePath: String
 
     init(
         baseURL: URL?,
@@ -14,7 +17,10 @@ struct UploadConfiguration {
         connectPath: String = "/v1/connect",
         liveSamplesPath: String = "/v1/live-samples",
         historicalImportPath: String = "/v1/runs/import-jsonl",
-        painTriggerPath: String = "/v1/pain-trigger"
+        painTriggerPath: String = "/v1/pain-trigger",
+        createPatientPath: String = "/v1/patients",
+        continueQuestionnairePath: String = "/v1/questionnaire/continue",
+        submitQuestionnairePath: String = "/v1/questionnaire/submit"
     ) {
         self.baseURL = baseURL
         self.bearerToken = bearerToken
@@ -22,6 +28,9 @@ struct UploadConfiguration {
         self.liveSamplesPath = liveSamplesPath
         self.historicalImportPath = historicalImportPath
         self.painTriggerPath = painTriggerPath
+        self.createPatientPath = createPatientPath
+        self.continueQuestionnairePath = continueQuestionnairePath
+        self.submitQuestionnairePath = submitQuestionnairePath
     }
 
     static let disabled = UploadConfiguration(baseURL: nil, bearerToken: nil)
@@ -53,6 +62,34 @@ struct UploadClient {
 
     func submitPainTrigger(payload: PainTriggerPayload) async throws -> PainTriggerResponse? {
         guard let url = endpointURL(path: configuration.painTriggerPath) else { return nil }
+        return try await post(payload, to: url)
+    }
+
+    func createPatient(_ patient: PatientProfile, deviceID: UUID) async throws -> CreatePatientResponse? {
+        guard let url = endpointURL(path: configuration.createPatientPath) else { return nil }
+        let payload = CreatePatientRequest(patient: patient, deviceID: deviceID, createdAt: Date())
+        return try await post(payload, to: url)
+    }
+
+    func continueQuestionnaire(sessionID: String, localSessionID: UUID, response: String) async throws -> ContinueQuestionnaireResponse? {
+        guard let url = endpointURL(path: configuration.continueQuestionnairePath) else { return nil }
+        let payload = ContinueQuestionnairePayload(
+            questionnaireSessionID: sessionID,
+            localSessionID: localSessionID,
+            response: response,
+            submittedAt: Date()
+        )
+        return try await post(payload, to: url)
+    }
+
+    func submitQuestionnaire(sessionID: String, localSessionID: UUID, transcript: [QuestionnaireDialogueMessage]) async throws -> SubmitQuestionnaireResponse? {
+        guard let url = endpointURL(path: configuration.submitQuestionnairePath) else { return nil }
+        let payload = SubmitQuestionnairePayload(
+            questionnaireSessionID: sessionID,
+            localSessionID: localSessionID,
+            transcript: transcript,
+            submittedAt: Date()
+        )
         return try await post(payload, to: url)
     }
 
