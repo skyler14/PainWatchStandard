@@ -9,6 +9,16 @@
     "Recompute pain for the current session.",
     "Continue the GPM follow-up for the active pain incident."
   ],
+  "invocation_name": "PainThermometer",
+  "tool_invocations": [
+    "PainThermometer.list_patients",
+    "PainThermometer.summarize_patient_history",
+    "PainThermometer.compute_pain_score",
+    "PainThermometer.start_questionnaire",
+    "PainThermometer.get_questionnaire",
+    "PainThermometer.continue_dialogue",
+    "PainThermometer.submit_questionnaire_answers"
+  ],
   "input_modes": ["text"],
   "output_modes": ["text", "application/json"],
   "requires_fhir_context": false,

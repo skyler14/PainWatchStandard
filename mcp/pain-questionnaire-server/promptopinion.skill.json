@@ -1,6 +1,7 @@
 {
   "name": "PainThermometer GPM Follow-up",
   "slug": "painthermometer-gpm-followup",
+  "invocation_name": "PainThermometer",
   "scope": "patient",
   "description": "Starts a conversational Geriatric Pain Measure follow-up when PainThermometer reports sustained watch pain activation.",
   "doctor_group": {
@@ -21,6 +22,15 @@
       "list_patients",
       "summarize_patient_history",
       "compute_pain_score"
+    ],
+    "tool_invocations": [
+      "PainThermometer.start_questionnaire",
+      "PainThermometer.get_questionnaire",
+      "PainThermometer.continue_dialogue",
+      "PainThermometer.submit_questionnaire_answers",
+      "PainThermometer.list_patients",
+      "PainThermometer.summarize_patient_history",
+      "PainThermometer.compute_pain_score"
     ],
     "extensions": {
       "ai.promptopinion/fhir-context": {

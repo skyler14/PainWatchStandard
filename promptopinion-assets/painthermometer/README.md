@@ -37,10 +37,49 @@ X-Patient-ID
 
 1. Open `Agents -> BYO Agents`.
 2. Create or edit a patient-scoped agent.
-3. Use `byo-agent-system-prompt.md` as the system prompt.
-4. In the `Tools` tab, attach the `PainThermometer` MCP server.
-5. In the `Response Format` tab, use `response-schema.json` if you want strict JSON summaries.
-6. In the `A2A & Skills` tab, add the skill metadata from `skill-card.json`.
+3. Name or reference the MCP server as `PainThermometer`. This is the invocation name the prompt expects.
+4. Use `byo-agent-system-prompt.md` as the system prompt. It includes the exact tool names and GPM question content.
+5. In the `Tools` tab, attach the `PainThermometer` MCP server.
+6. In the `Response Format` tab, use `response-schema.json` if you want strict JSON summaries.
+7. In the `A2A & Skills` tab, add the skill metadata from `skill-card.json`.
+
+## Invocation Names
+
+MCP server invocation/display name:
+
+```text
+PainThermometer
+```
+
+Exact tool names the agent should call:
+
+```text
+list_patients
+summarize_patient_history
+compute_pain_score
+start_questionnaire
+get_questionnaire
+continue_dialogue
+submit_questionnaire_answers
+```
+
+Common user phrases and intended tool calls:
+
+| User/clinician phrase | Tool |
+| --- | --- |
+| "show actual patients" | `list_patients` |
+| "summarize this patient" | `summarize_patient_history` |
+| "compute pain" | `compute_pain_score` |
+| "recompute pain for this session" | `compute_pain_score` |
+| "start the questionnaire" | `start_questionnaire` |
+| patient answers a question | `continue_dialogue` |
+| "submit the survey" | `submit_questionnaire_answers` |
+
+Default clinician group:
+
+```text
+grp_doctor_a
+```
 
 ## Expected Agent Behaviors
 
@@ -50,6 +89,14 @@ X-Patient-ID
 - During a watch pain incident, use `start_questionnaire` or `continue_dialogue` to guide the Geriatric Pain Measure follow-up.
 - Ask broad, natural questions that fill multiple missing GPM fields at once.
 - Once `can_submit` is true, tell the user that the survey is ready to submit.
+
+The GPM content is not optional. The agent prompt includes the actual question fields:
+
+- activity/function: vigorous activity, moderate activity, groceries, stairs, few steps, walking more than one block, walking one block or less, bathing/dressing
+- activity limitation: reduced time, accomplishing less, limited kind of activities, extra effort
+- sleep/social/support/mood: sleep trouble, religious activity, social/recreation, transportation, fatigue, help needed, sadness/depression
+- severity: pain today 0-10, average pain last seven days 0-10
+- chronicity/frequency: never goes away, daily pain, several times per week
 
 ## Smoke Tests
 
