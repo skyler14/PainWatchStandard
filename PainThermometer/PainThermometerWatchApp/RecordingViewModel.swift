@@ -513,22 +513,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
         isRecordingQuestionnaireResponse = true
         responseSilenceProgress = 1
         questionnaireResponseText = ""
-        #if os(watchOS)
-        voiceController.startDictation(
-            onTranscript: { [weak self] transcript in
-                guard let self else { return }
-                self.questionnaireResponseText = transcript
-                self.transcriptText = transcript
-                self.voiceStatusText = self.voiceController.status
-            },
-            onFinished: { [weak self] in
-                self?.finalizeQuestionnaireResponse()
-            }
-        )
-        voiceStatusText = voiceController.status
-        transcriptText = voiceController.transcript
-        #else
-        voiceController.startListening { [weak self] transcript in
+        let started = voiceController.startListening { [weak self] transcript in
             guard let self else { return }
             self.questionnaireResponseText = transcript
             self.transcriptText = transcript
@@ -536,8 +521,12 @@ final class RecordingViewModel: NSObject, ObservableObject {
         }
         voiceStatusText = voiceController.status
         transcriptText = voiceController.transcript
-        startSilenceCountdown()
-        #endif
+        if started {
+            startSilenceCountdown()
+        } else {
+            isRecordingQuestionnaireResponse = false
+            responseSilenceProgress = 0
+        }
     }
 
     func stopQuestionnaireResponseRecording() {

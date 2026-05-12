@@ -1,8 +1,5 @@
 import AVFoundation
 import Foundation
-#if os(watchOS)
-import WatchKit
-#endif
 
 #if canImport(Speech)
 import Speech
@@ -38,6 +35,18 @@ final class VoiceDialogueController: NSObject, ObservableObject {
     }
 
     func requestSpeechAuthorization() async {
+        #if os(watchOS) || os(iOS)
+        let microphoneAllowed = await withCheckedContinuation { continuation in
+            AVAudioSession.sharedInstance().requestRecordPermission { allowed in
+                continuation.resume(returning: allowed)
+            }
+        }
+        guard microphoneAllowed else {
+            status = "Mic denied"
+            return
+        }
+        #endif
+
         #if canImport(Speech)
         let speechStatus = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
@@ -61,17 +70,22 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         #endif
     }
 
-    func startListening(onTranscript: @escaping (String) -> Void) {
+    @discardableResult
+    func startListening(onTranscript: @escaping (String) -> Void) -> Bool {
         transcript = ""
         stopListening()
 
         #if canImport(Speech)
         guard let speechRecognizer, speechRecognizer.isAvailable else {
             status = "Speech recognizer unavailable"
-            return
+            return false
         }
 
         do {
+            if synthesizer.isSpeaking {
+                synthesizer.stopSpeaking(at: .immediate)
+                isSpeaking = false
+            }
             try configureAudioSession()
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.shouldReportPartialResults = true
@@ -109,44 +123,23 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         } catch {
             status = "Mic error: \(error.localizedDescription)"
             stopListening()
+            return false
         }
+        return true
         #else
         status = "Speech unavailable"
+        return false
         #endif
     }
 
     func startDictation(onTranscript: @escaping (String) -> Void, onFinished: @escaping () -> Void) {
-        transcript = ""
-        #if os(watchOS)
-        guard let controller = WKExtension.shared().visibleInterfaceController else {
-            status = "Dictation unavailable"
+        if !startListening(onTranscript: onTranscript) {
             onFinished()
-            return
         }
-        status = "Dictation"
-        controller.presentTextInputController(
-            withSuggestions: nil,
-            allowedInputMode: .plain
-        ) { [weak self] results in
-            Task { @MainActor in
-                guard let self else { return }
-                let text = results?.compactMap { $0 as? String }.joined(separator: " ") ?? ""
-                self.transcript = text
-                if !text.isEmpty {
-                    onTranscript(text)
-                    self.status = "Transcript captured"
-                } else {
-                    self.status = "No speech captured"
-                }
-                onFinished()
-            }
-        }
-        #else
-        startListening(onTranscript: onTranscript)
-        #endif
     }
 
     func stopListening() {
+        let wasListening = audioEngine.isRunning
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
@@ -158,12 +151,16 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         recognitionTask = nil
         recognitionRequest = nil
         #endif
+
+        if wasListening, status == "Listening" {
+            status = "Voice idle"
+        }
     }
 
     private func configureAudioSession() throws {
         #if os(watchOS) || os(iOS)
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+        try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
         #endif
     }
