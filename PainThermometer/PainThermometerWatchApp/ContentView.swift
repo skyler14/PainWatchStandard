@@ -11,6 +11,7 @@ private enum WatchTab {
 struct ContentView: View {
     @EnvironmentObject private var recorder: RecordingViewModel
     @State private var selectedTab: WatchTab = .main
+    private let orderedTabs: [WatchTab] = [.main, .baseline, .questionnaire, .charts, .patient]
 
     var body: some View {
         Group {
@@ -29,11 +30,29 @@ struct ContentView: View {
                     PatientInfoTab()
                         .tag(WatchTab.patient)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .highPriorityGesture(tabSwipeGesture)
             }
         }
         .task {
             await recorder.prepare()
         }
+    }
+
+    private var tabSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+                guard abs(horizontal) > 28, abs(horizontal) > abs(vertical) * 1.35 else { return }
+                moveTab(horizontal < 0 ? 1 : -1)
+            }
+    }
+
+    private func moveTab(_ delta: Int) {
+        guard let index = orderedTabs.firstIndex(of: selectedTab) else { return }
+        let nextIndex = min(max(index + delta, 0), orderedTabs.count - 1)
+        selectedTab = orderedTabs[nextIndex]
     }
 }
 

@@ -72,7 +72,7 @@ type PainIncident = {
 
 type CompletedSurvey = {
   id: string;
-  status: "completed";
+  status: "completed" | "in_progress";
   finalGpmScore: number;
   adjustedGpmScore: number;
   adjustmentReason: string;
@@ -400,6 +400,7 @@ function App() {
   const [groups, setGroups] = React.useState<Group[]>(defaultGroups);
   const [registryLive, setRegistryLive] = React.useState(false);
   const [fhirConfigured, setFhirConfigured] = React.useState(false);
+  const [isRefreshingRegistry, setIsRefreshingRegistry] = React.useState(false);
   const [selectedGroupId, setSelectedGroupId] = React.useState(
     () => localStorage.getItem("painDashboard.selectedGroupId") || doctorAGroup.id,
   );
@@ -428,8 +429,25 @@ function App() {
   const [isLoadingSummary, setIsLoadingSummary] = React.useState(false);
   const [showAuthzInfo, setShowAuthzInfo] = React.useState(false);
 
+  const refreshRegistry = React.useCallback(async () => {
+    setIsRefreshingRegistry(true);
+    try {
+      const registry = await fetchRegistry();
+      setGroups(registry.groups);
+      setRegistryLive(registry.live);
+      setFhirConfigured(registry.fhirConfigured);
+    } catch {
+      setGroups(defaultGroups);
+      setRegistryLive(false);
+      setFhirConfigured(false);
+    } finally {
+      setIsRefreshingRegistry(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     let isCurrent = true;
+    setIsRefreshingRegistry(true);
     fetchRegistry()
       .then((registry) => {
         if (!isCurrent) return;
@@ -442,6 +460,9 @@ function App() {
         setGroups(defaultGroups);
         setRegistryLive(false);
         setFhirConfigured(false);
+      })
+      .finally(() => {
+        if (isCurrent) setIsRefreshingRegistry(false);
       });
     return () => {
       isCurrent = false;
@@ -530,6 +551,18 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              isIconOnly
+              aria-label="Refresh patients and sessions"
+              size="sm"
+              variant="tertiary"
+              isDisabled={isRefreshingRegistry}
+              onPress={() => {
+                void refreshRegistry();
+              }}
+            >
+              <RefreshCw className={isRefreshingRegistry ? "animate-spin" : ""} size={16} />
+            </Button>
             <Chip color={fhirConfigured ? "success" : "warning"} size="sm" variant="soft">
               <Chip.Label>{fhirConfigured ? "FHIR context available" : "FHIR context pending"}</Chip.Label>
             </Chip>

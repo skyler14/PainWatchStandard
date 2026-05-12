@@ -304,6 +304,18 @@ function authorizedByApiKey(req) {
   return apiKey === expected || bearer === `Bearer ${expected}`;
 }
 
+function normalizeDoctorGroupId(value) {
+  if (!value) return DOCTOR_A_GROUP_ID;
+  const normalized = String(value).toLowerCase().replaceAll("-", "_");
+  if (normalized === "doctor_a" || normalized === "grp_doctor_a" || normalized === "doctora") {
+    return DOCTOR_A_GROUP_ID;
+  }
+  if (normalized === "doctor_b" || normalized === "grp_doctor_b" || normalized === "doctorb") {
+    return DOCTOR_B_GROUP_ID;
+  }
+  return String(value);
+}
+
 async function loadPatientsFromFirestore() {
   const snapshot = await db.collection("patients").orderBy("createdAt", "desc").get();
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -725,6 +737,9 @@ function patientFromWatchPayload(body) {
   const firstName = incoming.first_name || incoming.firstName || incoming.given || "Watch";
   const lastName = incoming.last_name || incoming.lastName || incoming.family || "Patient";
   const name = incoming.display_name || incoming.displayName || `${firstName} ${lastName}`.trim();
+  const doctorGroupId = normalizeDoctorGroupId(
+    body.doctor_group_id || body.doctorGroupID || incoming.doctor_group_id || incoming.doctorGroupID,
+  );
   return {
     id,
     fhirPatientId: safeId(`pain-watch-${id}`, "fhir-patient"),
@@ -735,7 +750,8 @@ function patientFromWatchPayload(body) {
     createdAt: incoming.created_at || incoming.createdAt || body.created_at || nowIso(),
     updatedAt: nowIso(),
     source: body.source || "PainThermometerWatchApp",
-    assignedGroupIds: [DOCTOR_A_GROUP_ID],
+    assignedGroupIds: [doctorGroupId],
+    primaryGroupId: doctorGroupId,
     deviceIds: body.device_id ? [String(body.device_id)] : [],
     sessionCount: 0,
   };
@@ -835,7 +851,24 @@ async function persistPatient(patient) {
     console.error("patient_fhir_write_failed", error);
   }
   try {
-    await db.collection("patients").doc(patient.id).set(cleanForFirestore(patient), { merge: true });
+    const cleanPatient = cleanForFirestore(patient);
+    await db.collection("patients").doc(patient.id).set(cleanPatient, { merge: true });
+    await db.collection("users").doc(patient.id).set(
+      cleanForFirestore({
+        id: patient.id,
+        type: "patient",
+        displayName: patient.name,
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        fhirPatientId: patient.fhirPatientId,
+        assignedGroupIds: patient.assignedGroupIds,
+        primaryGroupId: patient.primaryGroupId || patient.assignedGroupIds?.[0] || DOCTOR_A_GROUP_ID,
+        source: patient.source,
+        createdAt: patient.createdAt,
+        updatedAt: nowIso(),
+      }),
+      { merge: true },
+    );
     firestore = { ok: true };
   } catch (error) {
     firestore = { ok: false, error: error.message };
@@ -857,12 +890,13 @@ function scoreValue(body) {
 function sessionFromPainTrigger(body, payload, patientId) {
   const triggerScore = scoreValue(body);
   const startedAt = body.triggered_at || body.triggeredAt || nowIso();
+  const clinicianGroupId = normalizeDoctorGroupId(body.doctor_group_id || body.doctorGroupID);
   return {
     id: payload.session_id,
     sessionId: payload.session_id,
     sessionType: "pain_incident",
     patientId,
-    clinicianGroupId: body.doctor_group_id || body.doctorGroupID || DOCTOR_A_GROUP_ID,
+    clinicianGroupId,
     startedAt,
     durationMinutes: 0,
     sourceDevice: body.source || "PainThermometer Watch PoC",
@@ -917,16 +951,23 @@ function sessionFromPainTrigger(body, payload, patientId) {
 async function persistPainSession(patientId, session) {
   try {
     const patientRef = db.collection("patients").doc(patientId);
-    await patientRef.collection("sessions").doc(session.sessionId).set(cleanForFirestore(session), { merge: true });
-    await patientRef.set(
-      {
-        id: patientId,
-        updatedAt: nowIso(),
-        assignedGroupIds: [DOCTOR_A_GROUP_ID],
-        sessionCount: admin.firestore.FieldValue.increment(1),
-      },
-      { merge: true },
-    );
+    const sessionRef = patientRef.collection("sessions").doc(session.sessionId);
+    await db.runTransaction(async (transaction) => {
+      const sessionSnapshot = await transaction.get(sessionRef);
+      transaction.set(sessionRef, cleanForFirestore(session), { merge: true });
+      transaction.set(db.collection("pain_sessions").doc(session.sessionId), cleanForFirestore(session), { merge: true });
+      transaction.set(
+        patientRef,
+        {
+          id: patientId,
+          updatedAt: nowIso(),
+          assignedGroupIds: [session.clinicianGroupId || DOCTOR_A_GROUP_ID],
+          latestSessionAt: session.startedAt,
+          sessionCount: admin.firestore.FieldValue.increment(sessionSnapshot.exists ? 0 : 1),
+        },
+        { merge: true },
+      );
+    });
     return { ok: true };
   } catch (error) {
     console.error("session_firestore_write_failed", error);
