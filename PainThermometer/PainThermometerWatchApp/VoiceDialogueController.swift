@@ -5,8 +5,18 @@ import Foundation
 import Speech
 #endif
 
+#if os(watchOS)
+import WatchKit
+#endif
+
 @MainActor
 final class VoiceDialogueController: NSObject, ObservableObject {
+    enum CaptureMode {
+        case streaming
+        case systemDictation
+        case unavailable
+    }
+
     @Published private(set) var transcript = ""
     @Published private(set) var status = "Voice idle"
     @Published private(set) var isSpeaking = false
@@ -18,6 +28,11 @@ final class VoiceDialogueController: NSObject, ObservableObject {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     #endif
+
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
 
     func speak(_ text: String) {
         guard !text.isEmpty else { return }
@@ -66,7 +81,11 @@ final class VoiceDialogueController: NSObject, ObservableObject {
             status = "Speech unavailable"
         }
         #else
+        #if os(watchOS)
+        status = "System dictation ready"
+        #else
         status = "Speech unavailable"
+        #endif
         #endif
     }
 
@@ -132,11 +151,57 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         #endif
     }
 
-    func startDictation(onTranscript: @escaping (String) -> Void, onFinished: @escaping () -> Void) {
-        if !startListening(onTranscript: onTranscript) {
-            onFinished()
+    @discardableResult
+    func startDictation(onTranscript: @escaping (String) -> Void, onFinished: @escaping () -> Void) -> CaptureMode {
+        #if canImport(Speech)
+        if startListening(onTranscript: onTranscript) {
+            return .streaming
         }
+        #if os(watchOS)
+        return startSystemDictation(onTranscript: onTranscript, onFinished: onFinished)
+        #else
+        return .unavailable
+        #endif
+        #elseif os(watchOS)
+        return startSystemDictation(onTranscript: onTranscript, onFinished: onFinished)
+        #else
+        status = "Speech unavailable"
+        onFinished()
+        return .unavailable
+        #endif
     }
+
+    #if os(watchOS)
+    private func startSystemDictation(onTranscript: @escaping (String) -> Void, onFinished: @escaping () -> Void) -> CaptureMode {
+        transcript = ""
+        stopListening()
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+            isSpeaking = false
+        }
+        guard let controller = WKExtension.shared().visibleInterfaceController else {
+            status = "Dictation unavailable"
+            onFinished()
+            return .unavailable
+        }
+        status = "System dictation"
+        controller.presentTextInputController(withSuggestions: nil, allowedInputMode: .plain) { [weak self] results in
+            Task { @MainActor in
+                guard let self else { return }
+                let text = results?.compactMap { $0 as? String }.first ?? ""
+                self.transcript = text
+                if text.isEmpty {
+                    self.status = "No speech captured"
+                } else {
+                    self.status = "Transcript captured"
+                    onTranscript(text)
+                }
+                onFinished()
+            }
+        }
+        return .systemDictation
+    }
+    #endif
 
     func stopListening() {
         let wasListening = audioEngine.isRunning
@@ -163,5 +228,25 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
         #endif
+    }
+}
+
+extension VoiceDialogueController: AVSpeechSynthesizerDelegate {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.isSpeaking = false
+            if self.status == "Speaking" {
+                self.status = "Voice idle"
+            }
+        }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.isSpeaking = false
+            if self.status == "Speaking" {
+                self.status = "Speech stopped"
+            }
+        }
     }
 }

@@ -50,6 +50,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     @Published private(set) var dialogueMessages: [QuestionnaireDialogueMessage] = []
     @Published private(set) var isRecordingQuestionnaireResponse = false
     @Published private(set) var responseSilenceProgress = 0.0
+    @Published private(set) var speakingProgress = 0.0
     @Published private(set) var questionnaireCompletionText = "0%"
     @Published private(set) var questionnaireCanSubmit = false
     @Published private(set) var voiceStatusText = "Voice idle"
@@ -75,6 +76,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     private var silenceTimer: Timer?
     private var silenceProgressTimer: Timer?
     private var silenceStartedAt: Date?
+    private var speakingProgressTimer: Timer?
     private var startedAt: Date?
     private var activeRun: RecordingRun?
     private var questionIndex = 0
@@ -161,6 +163,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
             dialogueMessages = []
             isRecordingQuestionnaireResponse = false
             responseSilenceProgress = 0
+            stopSpeakingProgress()
             questionIndex = 0
             currentQuestionText = Self.questionnairePrompts[0]
             questionnaireTriggeredForRunID = nil
@@ -506,25 +509,39 @@ final class RecordingViewModel: NSObject, ObservableObject {
         guard selectedQuestionnaireSessionID != nil else { return }
         voiceController.speak(currentQuestionText)
         voiceStatusText = voiceController.status
+        if voiceController.isSpeaking {
+            startSpeakingProgress(for: currentQuestionText)
+        } else {
+            stopSpeakingProgress()
+        }
     }
 
     func startQuestionnaireResponseRecording() {
         guard selectedQuestionnaireSessionID != nil else { return }
+        stopSpeakingProgress()
         isRecordingQuestionnaireResponse = true
         responseSilenceProgress = 1
         questionnaireResponseText = ""
-        let started = voiceController.startListening { [weak self] transcript in
+        let mode = voiceController.startDictation { [weak self] transcript in
             guard let self else { return }
             self.questionnaireResponseText = transcript
             self.transcriptText = transcript
             self.voiceStatusText = self.voiceController.status
+        } onFinished: { [weak self] in
+            Task { @MainActor in
+                self?.finalizeQuestionnaireResponse()
+            }
         }
         voiceStatusText = voiceController.status
         transcriptText = voiceController.transcript
-        if started {
+        switch mode {
+        case .streaming:
             questionnaireText = "Listening"
             startSilenceCountdown()
-        } else {
+        case .systemDictation:
+            questionnaireText = "Dictating"
+            responseSilenceProgress = 1
+        case .unavailable:
             isRecordingQuestionnaireResponse = false
             responseSilenceProgress = 0
         }
@@ -600,6 +617,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
         voiceController.stopListening()
         voiceStatusText = voiceController.status
         responseSilenceProgress = 0
+        stopSpeakingProgress()
         silenceTimer?.invalidate()
         silenceTimer = nil
         silenceProgressTimer?.invalidate()
@@ -640,6 +658,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
         voiceController.stopListening()
         voiceStatusText = voiceController.status
         responseSilenceProgress = 0
+        stopSpeakingProgress()
 
         let response = questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !response.isEmpty else {
@@ -862,6 +881,31 @@ final class RecordingViewModel: NSObject, ObservableObject {
                 self.responseSilenceProgress = max(0, 1 - elapsed / 10)
             }
         }
+    }
+
+    private func startSpeakingProgress(for text: String) {
+        stopSpeakingProgress()
+        guard !text.isEmpty else { return }
+        let duration = min(18, max(1.8, Double(text.split(separator: " ").count) * 0.45))
+        let startedAt = Date()
+        speakingProgress = 1
+        speakingProgressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let elapsed = Date().timeIntervalSince(startedAt)
+                if elapsed >= duration || !self.voiceController.isSpeaking {
+                    self.stopSpeakingProgress()
+                } else {
+                    self.speakingProgress = max(0, 1 - elapsed / duration)
+                }
+            }
+        }
+    }
+
+    private func stopSpeakingProgress() {
+        speakingProgressTimer?.invalidate()
+        speakingProgressTimer = nil
+        speakingProgress = 0
     }
 
     private func createQuestionnaireSessionCard() {

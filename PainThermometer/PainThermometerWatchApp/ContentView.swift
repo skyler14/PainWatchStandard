@@ -31,7 +31,8 @@ struct ContentView: View {
                         .tag(WatchTab.patient)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .highPriorityGesture(tabSwipeGesture)
+                .contentShape(Rectangle())
+                .simultaneousGesture(tabSwipeGesture, including: .all)
             }
         }
         .task {
@@ -191,11 +192,17 @@ private struct MonitoringTab: View {
 }
 
 private struct FingerDragScrollView<Content: View>: View {
+    private enum DragAxis {
+        case horizontal
+        case vertical
+    }
+
     @ViewBuilder let content: Content
     @State private var contentHeight: CGFloat = 0
     @State private var viewportHeight: CGFloat = 0
     @State private var offset: CGFloat = 0
     @State private var dragStartOffset: CGFloat = 0
+    @State private var activeDragAxis: DragAxis?
 
     var body: some View {
         GeometryReader { proxy in
@@ -210,10 +217,20 @@ private struct FingerDragScrollView<Content: View>: View {
                 .gesture(
                     DragGesture(minimumDistance: 4)
                         .onChanged { value in
+                            if activeDragAxis == nil {
+                                let horizontal = abs(value.translation.width)
+                                let vertical = abs(value.translation.height)
+                                if horizontal > 8 || vertical > 8 {
+                                    activeDragAxis = horizontal > vertical * 1.15 ? .horizontal : .vertical
+                                }
+                            }
+                            guard activeDragAxis != .horizontal else { return }
                             viewportHeight = proxy.size.height
                             offset = clampedOffset(dragStartOffset + value.translation.height)
                         }
                         .onEnded { value in
+                            defer { activeDragAxis = nil }
+                            guard activeDragAxis != .horizontal else { return }
                             viewportHeight = proxy.size.height
                             offset = clampedOffset(dragStartOffset + value.translation.height)
                             dragStartOffset = offset
@@ -434,6 +451,16 @@ private struct QuestionnaireSessionCard: View {
                         if message.speaker == .system {
                             recorder.speakCurrentQuestion()
                         }
+                    }
+                }
+
+                if recorder.speakingProgress > 0 {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Label("Speaking", systemImage: "speaker.wave.2.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        ProgressView(value: recorder.speakingProgress)
+                            .progressViewStyle(.linear)
                     }
                 }
 
