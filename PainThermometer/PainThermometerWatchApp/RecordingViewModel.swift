@@ -520,35 +520,28 @@ final class RecordingViewModel: NSObject, ObservableObject {
         guard selectedQuestionnaireSessionID != nil else { return }
         stopSpeakingProgress()
         isRecordingQuestionnaireResponse = true
-        responseSilenceProgress = 1
+        responseSilenceProgress = 0
         questionnaireResponseText = ""
-        let mode = voiceController.startDictation { [weak self] transcript in
-            guard let self else { return }
-            self.questionnaireResponseText = transcript
-            self.transcriptText = transcript
-            self.voiceStatusText = self.voiceController.status
-        } onFinished: { [weak self] in
-            Task { @MainActor in
-                self?.finalizeQuestionnaireResponse()
-            }
-        }
+        stopSilenceCountdown()
+        voiceController.stopListening()
         voiceStatusText = voiceController.status
         transcriptText = voiceController.transcript
-        switch mode {
-        case .streaming:
-            questionnaireText = "Listening"
-            startSilenceCountdown()
-        case .systemDictation:
-            questionnaireText = "Dictating"
-            responseSilenceProgress = 1
-        case .unavailable:
-            isRecordingQuestionnaireResponse = false
-            responseSilenceProgress = 0
-        }
+        questionnaireText = "Typing response"
     }
 
     func stopQuestionnaireResponseRecording() {
         finalizeQuestionnaireResponse()
+    }
+
+    func cancelQuestionnaireResponse() {
+        stopSilenceCountdown()
+        voiceController.stopListening()
+        isRecordingQuestionnaireResponse = false
+        responseSilenceProgress = 0
+        questionnaireResponseText = ""
+        transcriptText = ""
+        voiceStatusText = voiceController.status
+        questionnaireText = "Questionnaire active"
     }
 
     func submitActiveQuestionnaire() {

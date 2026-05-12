@@ -467,26 +467,29 @@ private struct QuestionnaireSessionCard: View {
                 if recorder.isRecordingQuestionnaireResponse {
                     VStack(alignment: .leading, spacing: 6) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Label("Dictating", systemImage: "waveform")
+                            Label("Response", systemImage: "keyboard")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            Text(recorder.questionnaireResponseText.isEmpty ? "Listening..." : recorder.questionnaireResponseText)
+                            TextField("Type response", text: $recorder.questionnaireResponseText)
                                 .font(.caption)
-                                .foregroundStyle(recorder.questionnaireResponseText.isEmpty ? .secondary : .primary)
-                                .multilineTextAlignment(.leading)
-                                .frame(maxWidth: .infinity, minHeight: 34, alignment: .topLeading)
+                                .textInputAutocapitalization(.sentences)
+                                .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
                                 .padding(6)
                                 .background(Color.secondary.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
                         }
-                        ProgressView(value: recorder.responseSilenceProgress)
-                            .progressViewStyle(.linear)
-                        Button {
-                            recorder.stopQuestionnaireResponseRecording()
-                        } label: {
-                            Label(
-                                recorder.questionnaireResponseText.isEmpty ? "Stop" : "Send",
-                                systemImage: recorder.questionnaireResponseText.isEmpty ? "stop.fill" : "paperplane.fill"
-                            )
+                        HStack {
+                            Button {
+                                recorder.cancelQuestionnaireResponse()
+                            } label: {
+                                Label("Cancel", systemImage: "xmark")
+                            }
+
+                            Button {
+                                recorder.stopQuestionnaireResponseRecording()
+                            } label: {
+                                Label("Send", systemImage: "paperplane.fill")
+                            }
+                            .disabled(recorder.questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
                 } else {
@@ -494,7 +497,7 @@ private struct QuestionnaireSessionCard: View {
                         Button {
                             recorder.startQuestionnaireResponseRecording()
                         } label: {
-                            Label("Start Now", systemImage: "mic.fill")
+                            Label("Start Now", systemImage: "keyboard")
                         }
 
                         if session.canSubmit {
