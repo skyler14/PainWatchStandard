@@ -41,6 +41,13 @@
         }
       },
       {
+        "source": "/api/patient-summary",
+        "function": {
+          "functionId": "patientSummary",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/v1/patients",
         "function": {
           "functionId": "createPatient",

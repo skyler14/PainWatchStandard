@@ -42,13 +42,19 @@ type Clinician = {
 
 type Patient = {
   id: string;
+  fhirPatientId?: string;
   name: string;
   age: number;
+  sessions?: PainIncident[];
   incidents: PainIncident[];
 };
 
 type PainIncident = {
   id: string;
+  sessionId?: string;
+  sessionType?: string;
+  patientId?: string;
+  clinicianGroupId?: string;
   startedAt: string;
   durationMinutes: number;
   sourceDevice: string;
@@ -101,6 +107,23 @@ type ChatMessage = {
   speaker: "patient" | "assistant";
   time: string;
   text: string;
+};
+
+type RegistryPayload = {
+  workspace?: {
+    fhirConfigured?: boolean;
+  };
+  groups?: Group[];
+};
+
+type PatientSummary = {
+  patient_id: string;
+  patient_name?: string;
+  summary: string;
+  incident_count?: number;
+  high_pain_incident_count?: number;
+  max_adjusted_gpm_score?: number | null;
+  latest_incident_at?: string | null;
 };
 
 const doctorAGroup: Group = {
@@ -298,16 +321,33 @@ const defaultGroups = [doctorAGroup, doctorBGroup];
 const authzConfig = {
   endpoint: "/api/promptopinion/authorize-patient-access",
   registryEndpoint: "/api/registry",
+  patientSummaryEndpoint: "/api/patient-summary",
   workspaceId: import.meta.env.VITE_PROMPTOPINION_WORKSPACE_ID,
 };
 
-async function fetchRegistryGroups(): Promise<Group[]> {
+async function fetchRegistry(): Promise<{ groups: Group[]; live: boolean; fhirConfigured: boolean }> {
   const response = await fetch(authzConfig.registryEndpoint);
   if (!response.ok) {
     throw new Error("registry_unavailable");
   }
-  const body = (await response.json()) as { groups?: Group[] };
-  return body.groups?.length ? body.groups : defaultGroups;
+  const body = (await response.json()) as RegistryPayload;
+  return {
+    groups: body.groups?.length ? body.groups : defaultGroups,
+    live: true,
+    fhirConfigured: body.workspace?.fhirConfigured === true,
+  };
+}
+
+async function fetchPatientSummary(groupId: string, patientId: string): Promise<PatientSummary> {
+  const params = new URLSearchParams({
+    clinician_group_id: groupId,
+    patient_id: patientId,
+  });
+  const response = await fetch(`${authzConfig.patientSummaryEndpoint}?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("summary_unavailable");
+  }
+  return (await response.json()) as PatientSummary;
 }
 
 async function checkPatientAccess(groupId: string, patientId: string): Promise<AccessDecision> {
@@ -358,31 +398,66 @@ function localMockAccessDecision(groupId: string, patientId: string): AccessDeci
 
 function App() {
   const [groups, setGroups] = React.useState<Group[]>(defaultGroups);
+  const [registryLive, setRegistryLive] = React.useState(false);
+  const [fhirConfigured, setFhirConfigured] = React.useState(false);
+  const [selectedGroupId, setSelectedGroupId] = React.useState(
+    () => localStorage.getItem("painDashboard.selectedGroupId") || doctorAGroup.id,
+  );
+  const [selectedPatientId, setSelectedPatientId] = React.useState(
+    () => localStorage.getItem("painDashboard.selectedPatientId") || doctorAGroup.patients[0].id,
+  );
   const doctorA = groups.find((group) => group.id === doctorAGroup.id) ?? doctorAGroup;
-  const patient = doctorA.patients[0] ?? doctorAGroup.patients[0];
-  const incident = patient.incidents[0];
-  const [selectedGroupId, setSelectedGroupId] = React.useState(doctorAGroup.id);
   const selectedGroup = groups.find((candidate) => candidate.id === selectedGroupId) ?? doctorA;
+  const visiblePatients = selectedGroup.patients.length ? selectedGroup.patients : doctorA.patients;
+  const patient =
+    visiblePatients.find((candidate) => candidate.id === selectedPatientId) ??
+    visiblePatients[0] ??
+    doctorAGroup.patients[0];
+  const patientSessions = patient.sessions?.length ? patient.sessions : patient.incidents;
+  const incident = patientSessions[0] ?? doctorAGroup.patients[0].incidents[0];
   const [accessDecision, setAccessDecision] = React.useState<AccessDecision | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = React.useState(true);
   const [summaryIndex, setSummaryIndex] = React.useState(0);
+  const [serviceSummary, setServiceSummary] = React.useState<PatientSummary | null>(null);
+  const [isLoadingSummary, setIsLoadingSummary] = React.useState(false);
   const [showAuthzInfo, setShowAuthzInfo] = React.useState(false);
 
   React.useEffect(() => {
     let isCurrent = true;
-    fetchRegistryGroups()
-      .then((nextGroups) => {
+    fetchRegistry()
+      .then((registry) => {
         if (!isCurrent) return;
-        setGroups(nextGroups);
+        setGroups(registry.groups);
+        setRegistryLive(registry.live);
+        setFhirConfigured(registry.fhirConfigured);
       })
       .catch(() => {
         if (!isCurrent) return;
         setGroups(defaultGroups);
+        setRegistryLive(false);
+        setFhirConfigured(false);
       });
     return () => {
       isCurrent = false;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!groups.some((group) => group.id === selectedGroupId)) {
+      setSelectedGroupId(doctorAGroup.id);
+      return;
+    }
+    const group = groups.find((candidate) => candidate.id === selectedGroupId);
+    const patientExists = group?.patients.some((candidate) => candidate.id === selectedPatientId);
+    if (!patientExists && group?.patients[0]) {
+      setSelectedPatientId(group.patients[0].id);
+    }
+  }, [groups, selectedGroupId, selectedPatientId]);
+
+  React.useEffect(() => {
+    localStorage.setItem("painDashboard.selectedGroupId", selectedGroup.id);
+    localStorage.setItem("painDashboard.selectedPatientId", patient.id);
+  }, [selectedGroup.id, patient.id]);
 
   React.useEffect(() => {
     let isCurrent = true;
@@ -397,6 +472,11 @@ function App() {
     };
   }, [selectedGroup.id, patient.id]);
 
+  React.useEffect(() => {
+    setServiceSummary(null);
+    setSummaryIndex(0);
+  }, [patient.id]);
+
   const visibleAccessDecision =
     accessDecision ??
     ({
@@ -409,8 +489,16 @@ function App() {
       policy: "registered_fhir_patient_scope",
     } satisfies AccessDecision);
 
-  const requestSummary = () => {
-    setSummaryIndex((current) => (current + 1) % incident.summaries.length);
+  const requestSummary = async () => {
+    setIsLoadingSummary(true);
+    try {
+      const summary = await fetchPatientSummary(selectedGroup.id, patient.id);
+      setServiceSummary(summary);
+    } catch {
+      setSummaryIndex((current) => (current + 1) % incident.summaries.length);
+    } finally {
+      setIsLoadingSummary(false);
+    }
   };
 
   return (
@@ -429,11 +517,11 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Chip color="success" size="sm" variant="soft">
-              <Chip.Label>FHIR context available</Chip.Label>
+            <Chip color={fhirConfigured ? "success" : "warning"} size="sm" variant="soft">
+              <Chip.Label>{fhirConfigured ? "FHIR context available" : "FHIR context pending"}</Chip.Label>
             </Chip>
-            <Chip color="warning" size="sm" variant="soft">
-              <Chip.Label>PoC data</Chip.Label>
+            <Chip color={registryLive ? "success" : "warning"} size="sm" variant="soft">
+              <Chip.Label>{registryLive ? "Live Firebase" : "Offline fallback"}</Chip.Label>
             </Chip>
           </div>
         </div>
@@ -449,8 +537,15 @@ function App() {
             showAuthzInfo={showAuthzInfo}
             onSelectGroup={(groupId) => {
               setSelectedGroupId(groupId);
+              const nextGroup = groups.find((group) => group.id === groupId);
+              if (nextGroup?.patients[0]) {
+                setSelectedPatientId(nextGroup.patients[0].id);
+              }
               setShowAuthzInfo(false);
             }}
+            selectedPatient={patient}
+            patients={visiblePatients}
+            onSelectPatient={setSelectedPatientId}
             onToggleInfo={() => setShowAuthzInfo((value) => !value)}
           />
           {!isCheckingAccess && visibleAccessDecision.allowed ? (
@@ -472,7 +567,8 @@ function App() {
           {!isCheckingAccess && visibleAccessDecision.allowed ? (
             <ConversationPanel
               incident={incident}
-              summary={incident.summaries[summaryIndex]}
+              summary={serviceSummary?.summary ?? incident.summaries[summaryIndex]}
+              isLoadingSummary={isLoadingSummary}
               onRequestSummary={requestSummary}
             />
           ) : (
@@ -487,18 +583,24 @@ function App() {
 function GroupAccessSwitcher({
   groups,
   selectedGroup,
+  selectedPatient,
+  patients,
   accessDecision,
   isCheckingAccess,
   showAuthzInfo,
   onSelectGroup,
+  onSelectPatient,
   onToggleInfo,
 }: {
   groups: Group[];
   selectedGroup: Group;
+  selectedPatient: Patient;
+  patients: Patient[];
   accessDecision: AccessDecision;
   isCheckingAccess: boolean;
   showAuthzInfo: boolean;
   onSelectGroup: (groupId: string) => void;
+  onSelectPatient: (patientId: string) => void;
   onToggleInfo: () => void;
 }) {
   return (
@@ -518,6 +620,21 @@ function GroupAccessSwitcher({
               </Button>
             ))}
           </div>
+          <label className="mt-4 block text-xs font-medium uppercase tracking-normal text-slate-500" htmlFor="patient-picker">
+            Patient
+          </label>
+          <select
+            id="patient-picker"
+            className="mt-2 h-9 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
+            value={selectedPatient.id}
+            onChange={(event) => onSelectPatient(event.target.value)}
+          >
+            {patients.map((patient) => (
+              <option key={patient.id} value={patient.id}>
+                {patient.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center gap-2">
           <Chip color={accessDecision.allowed ? "success" : "danger"} size="sm" variant="soft">
@@ -623,7 +740,9 @@ function PatientOverview({
           <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-medium uppercase tracking-normal text-slate-500">Patients</p>
             <p className="mt-2 text-sm font-semibold">{patient.name}</p>
-            <p className="text-xs text-slate-500">Age {patient.age} · 1 active incident</p>
+            <p className="text-xs text-slate-500">
+              Age {patient.age} · {(patient.sessions?.length ?? patient.incidents.length)} session
+            </p>
           </div>
         </Card.Content>
       </Card>
@@ -633,7 +752,7 @@ function PatientOverview({
           <div>
             <Card.Title className="text-base">{patient.name}</Card.Title>
             <Card.Description>
-              Incident {incident.id} · {new Date(incident.startedAt).toLocaleString()}
+              Session {incident.sessionId ?? incident.id} · {new Date(incident.startedAt).toLocaleString()}
             </Card.Description>
           </div>
           <Chip color="danger" size="sm" variant="soft">
@@ -678,7 +797,7 @@ function IncidentCharts({ incident }: { incident: PainIncident }) {
             <Activity size={16} />
             Incident Signal
           </Card.Title>
-          <Card.Description>Mocked from the 100-sample watch buffer.</Card.Description>
+          <Card.Description>From the latest 100-sample watch buffer.</Card.Description>
         </Card.Header>
         <Card.Content>
           <svg className="h-36 w-full overflow-visible" viewBox="0 0 300 128" role="img" aria-label="Incident signal chart">
@@ -873,10 +992,12 @@ function SurveyList({ survey }: { survey: CompletedSurvey }) {
 function ConversationPanel({
   incident,
   summary,
+  isLoadingSummary,
   onRequestSummary,
 }: {
   incident: PainIncident;
   summary: string;
+  isLoadingSummary: boolean;
   onRequestSummary: () => void;
 }) {
   return (
@@ -888,7 +1009,7 @@ function ConversationPanel({
               <MessageSquareText size={18} />
               Interview Log
             </h2>
-            <p className="text-sm text-slate-500">Completed session for {incident.id}</p>
+            <p className="text-sm text-slate-500">Completed session for {incident.sessionId ?? incident.id}</p>
           </div>
           <Chip color="success" size="sm" variant="soft">
             <Chip.Label>Completed</Chip.Label>
@@ -926,9 +1047,9 @@ function ConversationPanel({
           <p className="text-sm text-emerald-900">{summary}</p>
         </div>
         <div className="flex gap-2">
-          <Button className="shrink-0" variant="secondary" onPress={onRequestSummary}>
+          <Button className="shrink-0" variant="secondary" isDisabled={isLoadingSummary} onPress={onRequestSummary}>
             <RefreshCw size={16} />
-            Summarize
+            {isLoadingSummary ? "Summarizing" : "Summarize"}
           </Button>
           <TextField fullWidth name="summary-prompt">
             <TextArea placeholder="Ask for a narrower session summary..." rows={1} />

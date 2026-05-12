@@ -19,7 +19,9 @@
       "start_questionnaire",
       "get_questionnaire",
       "continue_dialogue",
-      "submit_questionnaire_answers"
+      "submit_questionnaire_answers",
+      "list_patients",
+      "summarize_patient_history"
     ],
     "extensions": {
       "ai.promptopinion/fhir-context": {

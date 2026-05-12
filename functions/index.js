@@ -14,6 +14,8 @@ const TOOL_NAMES = {
   get: "get_questionnaire",
   submit: "submit_questionnaire_answers",
   continue: "continue_dialogue",
+  listPatients: "list_patients",
+  summarizePatientHistory: "summarize_patient_history",
 };
 
 const GPM_ITEMS = [
@@ -242,6 +244,14 @@ const seedIncident = {
   ],
 };
 
+const seedSession = {
+  ...seedIncident,
+  sessionId: seedIncident.id,
+  sessionType: "pain_incident",
+  patientId: TEST_PATIENT_ID,
+  clinicianGroupId: DOCTOR_A_GROUP_ID,
+};
+
 function jsonRpc(id, result) {
   return { jsonrpc: "2.0", id: id ?? null, result };
 }
@@ -288,11 +298,58 @@ function buildGroupsPayload() {
       .filter((patient) => doctor.patientIds.includes(patient.id))
       .map((patient) => ({
         id: patient.id,
+        fhirPatientId: patient.fhirPatientId,
         name: patient.name,
         age: patient.age,
+        assignedGroupIds: patient.assignedGroupIds,
+        sessions: patient.id === TEST_PATIENT_ID ? [seedSession] : [],
         incidents: patient.id === TEST_PATIENT_ID ? [seedIncident] : [],
       })),
   }));
+}
+
+function patientHistory(patientId) {
+  const patient = registry.patients.find((candidate) => candidate.id === patientId);
+  if (!patient) return null;
+  return {
+    ...patient,
+    sessions: patient.id === TEST_PATIENT_ID ? [seedSession] : [],
+    incidents: patient.id === TEST_PATIENT_ID ? [seedIncident] : [],
+  };
+}
+
+function summarizePatient(patientId) {
+  const patient = patientHistory(patientId);
+  if (!patient) {
+    return {
+      patient_id: patientId,
+      summary: "No patient record was found for this clinician context.",
+      incidents: [],
+    };
+  }
+  const sessions = patient.sessions || [];
+  const highPainCount = sessions.filter((session) => session.activation?.triggerScore >= 0.65).length;
+  const adjustedScores = sessions
+    .map((session) => session.survey?.adjustedGpmScore)
+    .filter((score) => typeof score === "number");
+  const maxAdjusted = adjustedScores.length ? Math.max(...adjustedScores) : null;
+  return {
+    patient_id: patient.id,
+    fhir_patient_id: patient.fhirPatientId,
+    patient_name: patient.name,
+    session_count: sessions.length,
+    incident_count: sessions.length,
+    high_pain_incident_count: highPainCount,
+    max_adjusted_gpm_score: maxAdjusted,
+    latest_session_at: sessions[0]?.startedAt ?? null,
+    latest_incident_at: sessions[0]?.startedAt ?? null,
+    summary:
+      sessions.length === 0
+        ? `${patient.name} has no recorded PainThermometer incidents yet.`
+        : `${patient.name} has ${sessions.length} recorded PainThermometer session. The latest event crossed the sustained pain threshold at ${Math.round((sessions[0].activation?.triggerScore || 0) * 100)}% with adjusted GPM ${sessions[0].survey?.adjustedGpmScore ?? "unknown"}. Interview notes emphasize ${sessions[0].survey?.adjustmentReason || "limited follow-up context"}`,
+    sessions,
+    incidents: sessions,
+  };
 }
 
 function fhirContext(req) {
@@ -511,8 +568,43 @@ function toolsList() {
           },
         },
       },
+      {
+        name: TOOL_NAMES.listPatients,
+        description: "List patients visible to a clinician group for use in Prompt Opinion chat patient pickers.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            clinician_group_id: { type: "string", description: "Clinician group id, for example grp_doctor_a." },
+          },
+        },
+      },
+      {
+        name: TOOL_NAMES.summarizePatientHistory,
+        description: "Summarize all known PainThermometer incidents, scores, surveys, and transcript notes for a visible patient.",
+        inputSchema: {
+          type: "object",
+          required: ["patient_id"],
+          properties: {
+            clinician_group_id: { type: "string", description: "Clinician group id, for example grp_doctor_a." },
+            patient_id: { type: "string", description: "Patient id returned by list_patients." },
+          },
+        },
+      },
     ],
   };
+}
+
+function visiblePatientsForGroup(groupId) {
+  return registry.patients
+    .filter((patient) => !groupId || groupCanReadPatient(groupId, patient.id))
+    .map((patient) => ({
+      id: patient.id,
+      fhir_patient_id: patient.fhirPatientId,
+      name: patient.name,
+      age: patient.age,
+      session_count: patient.id === TEST_PATIENT_ID ? 1 : 0,
+      incident_count: patient.id === TEST_PATIENT_ID ? 1 : 0,
+    }));
 }
 
 function toolResult(req, name, args) {
@@ -532,6 +624,34 @@ function toolResult(req, name, args) {
     };
   } else if ([TOOL_NAMES.start, TOOL_NAMES.get, TOOL_NAMES.continue].includes(name)) {
     payload = questionnairePayload(req, enrichedArgs);
+  } else if (name === TOOL_NAMES.listPatients) {
+    const groupId = args.clinician_group_id || args.group_id || DOCTOR_A_GROUP_ID;
+    payload = {
+      clinician_group_id: groupId,
+      patients: visiblePatientsForGroup(groupId),
+      generated_at: nowIso(),
+      prompt_opinion_context: fhirContext(req),
+    };
+  } else if (name === TOOL_NAMES.summarizePatientHistory) {
+    const groupId = args.clinician_group_id || args.group_id || DOCTOR_A_GROUP_ID;
+    const patientId = args.patient_id || fhirContext(req).patient_id || TEST_PATIENT_ID;
+    if (!groupCanReadPatient(groupId, patientId)) {
+      payload = {
+        clinician_group_id: groupId,
+        patient_id: patientId,
+        allowed: false,
+        summary: "This clinician group is not assigned to the requested patient.",
+        generated_at: nowIso(),
+      };
+    } else {
+      payload = {
+        allowed: true,
+        clinician_group_id: groupId,
+        ...summarizePatient(patientId),
+        generated_at: nowIso(),
+        prompt_opinion_context: fhirContext(req),
+      };
+    }
   } else {
     return null;
   }
@@ -682,6 +802,38 @@ exports.authorizePatientAccess = onRequest(
       source: "prompt_opinion_fhir",
       fhirPatientId: registry.patients.find((patient) => patient.id === patientId)?.fhirPatientId || patientId,
       policy: "registered_fhir_patient_scope",
+    });
+  },
+);
+
+exports.patientSummary = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    cors: true,
+    secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
+  },
+  async (req, res) => {
+    if (req.method !== "GET") {
+      return sendJson(res, 405, { error: "method_not_allowed" });
+    }
+
+    const groupId = req.query.clinician_group_id || DOCTOR_A_GROUP_ID;
+    const patientId = req.query.patient_id || TEST_PATIENT_ID;
+    if (!groupCanReadPatient(groupId, patientId)) {
+      return sendJson(res, 403, {
+        allowed: false,
+        clinician_group_id: groupId,
+        patient_id: patientId,
+        summary: "This clinician group is not assigned to the requested patient.",
+      });
+    }
+
+    return sendJson(res, 200, {
+      allowed: true,
+      clinician_group_id: groupId,
+      ...summarizePatient(patientId),
+      generated_at: nowIso(),
     });
   },
 );
