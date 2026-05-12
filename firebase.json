@@ -55,6 +55,27 @@
         }
       },
       {
+        "source": "/v1/connect",
+        "function": {
+          "functionId": "connect",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/live-samples",
+        "function": {
+          "functionId": "liveSamples",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/v1/pain-score",
+        "function": {
+          "functionId": "painScore",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/v1/pain-trigger",
         "function": {
           "functionId": "painTrigger",

@@ -17,6 +17,7 @@ const TOOL_NAMES = {
   continue: "continue_dialogue",
   listPatients: "list_patients",
   summarizePatientHistory: "summarize_patient_history",
+  computePainScore: "compute_pain_score",
 };
 
 const GPM_ITEMS = [
@@ -332,6 +333,12 @@ async function loadSessionsForPatient(patientId) {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
+async function loadSessionForPatient(patientId, sessionId) {
+  if (!patientId || !sessionId) return null;
+  const doc = await db.collection("patients").doc(patientId).collection("sessions").doc(sessionId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
 async function loadPatient(patientId) {
   try {
     const snapshot = await db.collection("patients").doc(patientId).get();
@@ -458,6 +465,68 @@ async function summarizePatient(patientId) {
   };
 }
 
+async function computePainScorePayload(req, args = {}) {
+  const groupId = args.clinician_group_id || args.group_id || DOCTOR_A_GROUP_ID;
+  const patientId = args.patient_id || fhirContext(req).patient_id || TEST_PATIENT_ID;
+  if (!(await groupCanReadPatient(groupId, patientId))) {
+    return {
+      allowed: false,
+      clinician_group_id: groupId,
+      patient_id: patientId,
+      summary: "This clinician group is not assigned to the requested patient.",
+      generated_at: nowIso(),
+    };
+  }
+
+  let session = args.session_id ? await loadSessionForPatient(patientId, args.session_id) : null;
+  if (!session) {
+    const history = await patientHistory(patientId);
+    session = history?.sessions?.[0] || null;
+  }
+
+  const vitals = normalizeVitals({
+    vitals: args.vitals || args.buffer || session?.vitals || session?.liveSamples || [],
+  });
+  const priorScore = session?.scores?.find?.((candidate) => candidate.name === "Pain likelihood")?.score;
+  const score = computePainScoreFromVitals(vitals, {
+    pain_score: args.pain_score,
+    trigger_score: session?.activation?.triggerScore,
+    score: priorScore !== undefined ? priorScore / 100 : undefined,
+  });
+  const patient = await loadPatient(patientId);
+
+  return {
+    allowed: true,
+    clinician_group_id: groupId,
+    patient_id: patientId,
+    patient_name: patient?.name,
+    session_id: args.session_id || session?.sessionId || session?.id || null,
+    source: vitals.length ? "stored_or_supplied_watch_vitals" : "no_vitals_available",
+    revised_scores: score,
+    scores: [
+      {
+        name: "Pain likelihood",
+        score: score.pain_score_0_100,
+        scale: "0-100",
+        severity: score.pain_detected ? "high" : score.pain_score_0_100 >= 45 ? "moderate" : "low",
+        note: "Recomputed from current stored watch vitals buffer",
+      },
+      {
+        name: "Stress likelihood",
+        score: Math.round(score.stress_likelihood_0_1 * 100),
+        scale: "0-100",
+        severity: score.stress_likelihood_0_1 >= 0.65 ? "high" : score.stress_likelihood_0_1 >= 0.45 ? "moderate" : "low",
+        note: "Secondary watch-signal estimate",
+      },
+    ],
+    vitals_window: score.vitals_window,
+    feature_summary: score.feature_summary,
+    summary: `Pain recompute for ${patient?.name || patientId} returned ${score.pain_score_0_100}% pain likelihood from ${score.vitals_window.sample_count} watch samples.`,
+    prompt_opinion_context: fhirContext(req),
+    generated_at: nowIso(),
+  };
+}
+
 function fhirContext(req) {
   return {
     fhir_server_url: req.get("x-fhir-server-url") ?? null,
@@ -538,6 +607,106 @@ function summarizeVitals(vitals) {
   };
 }
 
+function firstFinite(...values) {
+  for (const value of values) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+  }
+  return null;
+}
+
+function valueFromPoint(point, keys) {
+  if (!point || typeof point !== "object") return null;
+  const readings = point.readings || point.sensors || point.sensor_values || point;
+  if (!readings || typeof readings !== "object") return null;
+
+  if (typeof readings.sensor === "string" && keys.includes(readings.sensor)) {
+    const sensorValue = firstFinite(readings.value, readings.numeric_value);
+    if (sensorValue !== null) return sensorValue;
+  }
+
+  for (const key of keys) {
+    if (readings[key] !== undefined) {
+      if (typeof readings[key] === "object" && readings[key] !== null) {
+        const nested = firstFinite(readings[key].value, readings[key].pain_likelihood_0_1);
+        if (nested !== null) return nested;
+      }
+      const direct = firstFinite(readings[key]);
+      if (direct !== null) return direct;
+    }
+  }
+  return null;
+}
+
+function mean(values) {
+  const finite = values.filter((value) => Number.isFinite(value));
+  if (!finite.length) return null;
+  return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+}
+
+function normalizeRange(value, low, high) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, (value - low) / (high - low)));
+}
+
+function computePainScoreFromVitals(vitals = [], options = {}) {
+  const recent = Array.isArray(vitals) ? vitals.slice(-100) : [];
+  const heartRates = recent.map((point) => valueFromPoint(point, ["heart_rate", "heart_rate_bpm", "hr"])).filter(Number.isFinite);
+  const respirations = recent
+    .map((point) => valueFromPoint(point, ["respiratory_rate", "respiratory_rate_rpm", "respiration"]))
+    .filter(Number.isFinite);
+  const temperatures = recent
+    .map((point) => valueFromPoint(point, ["wrist_temperature", "temperature", "wrist_temperature_c"]))
+    .filter(Number.isFinite);
+  const oxygen = recent
+    .map((point) => valueFromPoint(point, ["oxygen_saturation", "spo2", "oxygen_saturation_0_1"]))
+    .filter(Number.isFinite);
+  const embeddedScores = recent
+    .map((point) => valueFromPoint(point, ["pain_likelihood_0_1", "pain_score", "score"]))
+    .filter(Number.isFinite)
+    .map((value) => (value > 1 ? value / 100 : value));
+
+  const hrMean = mean(heartRates);
+  const rrMean = mean(respirations);
+  const tempMean = mean(temperatures);
+  const spo2Mean = mean(oxygen);
+  const embeddedMean = mean(embeddedScores);
+  const triggerHint = firstFinite(options.pain_score, options.trigger_score, options.score);
+
+  const heuristic =
+    normalizeRange(hrMean, 68, 112) * 0.34 +
+    normalizeRange(rrMean, 12, 24) * 0.2 +
+    normalizeRange(tempMean, 32.8, 34.2) * 0.12 +
+    (spo2Mean === null ? 0 : normalizeRange(0.98 - (spo2Mean > 1 ? spo2Mean / 100 : spo2Mean), 0, 0.06) * 0.08);
+  const blended = firstFinite(embeddedMean, triggerHint) !== null ? heuristic * 0.45 + firstFinite(embeddedMean, triggerHint) * 0.55 : heuristic;
+  const painLikelihood = Math.max(0.01, Math.min(0.99, blended || 0.01));
+  const vitalsWindow = summarizeVitals(recent);
+  const coverage = vitalsWindow.sensors_present.length ? Math.min(1, vitalsWindow.sensors_present.length / 5) : 0;
+  const quality = Math.max(0.2, Math.min(1, coverage * Math.min(1, recent.length / 10)));
+  const confidence = Math.max(0.35, Math.min(0.95, 0.42 + quality * 0.35 + Math.abs(painLikelihood - 0.5) * 0.3));
+
+  return {
+    score_name: "pain_sensor_recompute",
+    pain_likelihood_0_1: painLikelihood,
+    pain_score_0_100: Math.round(painLikelihood * 100),
+    pain_detected: painLikelihood >= 0.65,
+    confidence_0_1: confidence,
+    quality_0_1: quality,
+    stress_likelihood_0_1: Math.max(0.05, Math.min(0.95, normalizeRange(hrMean, 72, 118) * 0.55 + normalizeRange(rrMean, 13, 25) * 0.45)),
+    baseline_departure_0_1: Math.max(0, Math.min(1, painLikelihood - 0.2)),
+    model_version: "firebase-watch-heuristic-v1",
+    vitals_window: vitalsWindow,
+    feature_summary: {
+      heart_rate_mean: hrMean,
+      respiratory_rate_mean: rrMean,
+      wrist_temperature_mean: tempMean,
+      oxygen_saturation_mean: spo2Mean,
+      embedded_pain_mean: embeddedMean,
+    },
+    generated_at: nowIso(),
+  };
+}
+
 function inferAnswersFromResponse(responseText = "", existingAnswers = {}) {
   const text = String(responseText || "").toLowerCase();
   const inferred = { ...existingAnswers };
@@ -581,6 +750,12 @@ function questionnairePayload(req, args = {}) {
   const requiredCount = GPM_ITEMS.length + 2;
   const completion = Math.min(1, Math.max(0, (requiredCount - missingFields(answers).length) / requiredCount));
   const painScore = Number(args.pain_score ?? args.score ?? 0.78);
+  const gpmRawScore = GPM_ITEMS.reduce((sum, item) => {
+    const answer = answers[item.id];
+    if (answer === undefined || answer === null || answer === "") return sum;
+    if (item.type === "score_0_10") return sum + Math.max(0, Math.min(10, Number(answer) || 0));
+    return sum + (String(answer).toLowerCase() === "yes" || answer === true ? 1 : 0);
+  }, 0);
   return {
     session_id: args.session_id || stableSessionId(),
     local_session_id: args.local_session_id || null,
@@ -589,6 +764,9 @@ function questionnairePayload(req, args = {}) {
     completion_0_1: completion,
     can_submit: completion >= 0.8,
     missing_fields: missingFields(answers),
+    answers,
+    gpm_raw_score: gpmRawScore,
+    gpm_adjusted_score: Math.round(gpmRawScore * 2.38),
     gpm_context: GPM_CONTEXT,
     gpm_items: GPM_ITEMS,
     vitals_window: summarizeVitals(vitals),
@@ -693,6 +871,22 @@ function toolsList() {
           properties: {
             clinician_group_id: { type: "string", description: "Clinician group id, for example grp_doctor_a." },
             patient_id: { type: "string", description: "Patient id returned by list_patients." },
+          },
+        },
+      },
+      {
+        name: TOOL_NAMES.computePainScore,
+        description:
+          "Compute or recompute PainThermometer pain sensor scores from a patient session, latest session, or supplied watch vitals buffer.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            clinician_group_id: { type: "string", description: "Clinician group id, for example grp_doctor_a." },
+            patient_id: { type: "string", description: "Patient id returned by list_patients." },
+            session_id: { type: "string", description: "Optional PainThermometer session id." },
+            vitals: { type: "array", maxItems: 100, items: { type: "object" } },
+            buffer: { type: "array", maxItems: 100, items: { type: "object" } },
+            pain_score: { type: "number", description: "Optional prior pain likelihood hint on 0-1 scale." },
           },
         },
       },
@@ -1220,6 +1414,174 @@ async function persistPainSession(patientId, session, fhirResult = null) {
   }
 }
 
+async function persistLiveSamples(patientId, sessionId, samples) {
+  if (!patientId || !sessionId || !Array.isArray(samples) || samples.length === 0) {
+    return { ok: false, reason: "missing_patient_session_or_samples" };
+  }
+  const patientRef = db.collection("patients").doc(patientId);
+  const sessionRef = patientRef.collection("sessions").doc(sessionId);
+  const topLevelRef = db.collection("pain_sessions").doc(sessionId);
+  try {
+    await db.runTransaction(async (transaction) => {
+      const sessionSnapshot = await transaction.get(sessionRef);
+      const existing = sessionSnapshot.exists ? sessionSnapshot.data() : {};
+      const liveSamples = [...(existing.liveSamples || []), ...samples].slice(-100);
+      const vitals = [...(existing.vitals || []), ...samples].slice(-100);
+      const updatedAt = nowIso();
+      transaction.set(
+        sessionRef,
+        cleanForFirestore({
+          liveSamples,
+          vitals,
+          updatedAt,
+          liveSampleCount: liveSamples.length,
+        }),
+        { merge: true },
+      );
+      transaction.set(
+        topLevelRef,
+        cleanForFirestore({
+          patientId,
+          sessionId,
+          liveSamples,
+          vitals,
+          updatedAt,
+          liveSampleCount: liveSamples.length,
+        }),
+        { merge: true },
+      );
+      transaction.set(patientRef, { updatedAt, latestSessionAt: updatedAt }, { merge: true });
+    });
+    return { ok: true, rowsReceived: samples.length };
+  } catch (error) {
+    console.error("live_samples_write_failed", error);
+    return { ok: false, error: error.message };
+  }
+}
+
+async function persistRecomputedScore(patientId, sessionId, payload) {
+  if (!payload?.allowed || !patientId || !sessionId) return { ok: false };
+  try {
+    const sessionRef = db.collection("patients").doc(patientId).collection("sessions").doc(sessionId);
+    const topRef = db.collection("pain_sessions").doc(sessionId);
+    const [sessionSnap, topSnap] = await Promise.all([sessionRef.get(), topRef.get()]);
+    const sessionData = sessionSnap.exists ? sessionSnap.data() : {};
+    const topData = topSnap.exists ? topSnap.data() : {};
+    const existingScores = Array.isArray(sessionData.scores)
+      ? sessionData.scores
+      : Array.isArray(topData.scores)
+        ? topData.scores
+        : [];
+    const activation = sessionData.activation || topData.activation || {};
+    const preservedScores = existingScores.filter((score) => {
+      const name = String(score?.name || "");
+      const note = String(score?.note || "");
+      if (name.startsWith("Recomputed ")) return false;
+      if (name === "Pain likelihood" && note.startsWith("Recomputed ")) return false;
+      if (name === "Stress likelihood" && note.startsWith("Secondary watch-signal")) return false;
+      return true;
+    });
+    if (
+      !preservedScores.some((score) => score?.name === "Pain likelihood") &&
+      Number.isFinite(activation.triggerScore)
+    ) {
+      preservedScores.unshift({
+        name: "Pain likelihood",
+        score: Math.round(activation.triggerScore * 100),
+        scale: "0-100",
+        severity: activation.triggerScore >= 0.7 ? "high" : "moderate",
+        note: "Watch model trigger score",
+      });
+    }
+    const recomputedScores = (payload.scores || []).map((score) => ({
+      ...score,
+      name:
+        score?.name === "Pain likelihood"
+          ? "Recomputed pain likelihood"
+          : score?.name === "Stress likelihood"
+            ? "Recomputed stress likelihood"
+            : `Recomputed ${score?.name || "score"}`,
+    }));
+    const patch = cleanForFirestore({
+      scores: [...preservedScores, ...recomputedScores],
+      recomputedPainScore: payload.revised_scores,
+      updatedAt: nowIso(),
+    });
+    await sessionRef.set(patch, { merge: true });
+    await db.collection("pain_sessions").doc(sessionId).set({ patientId, sessionId, ...patch }, { merge: true });
+    return { ok: true };
+  } catch (error) {
+    console.error("recomputed_score_write_failed", error);
+    return { ok: false, error: error.message };
+  }
+}
+
+async function persistQuestionnaireTurn(sessionId, responseText, payload) {
+  if (!sessionId) return { ok: false };
+  try {
+    const topSession = await db.collection("pain_sessions").doc(sessionId).get();
+    const sessionData = topSession.exists ? topSession.data() : {};
+    const patientId = sessionData.patientId;
+    if (!patientId) return { ok: false, reason: "missing_patient_id" };
+    const now = nowIso();
+    const patientMessage = {
+      id: `msg_patient_${Date.now()}`,
+      speaker: "patient",
+      time: now.slice(11, 16),
+      text: responseText,
+    };
+    const assistantMessage = {
+      id: `msg_assistant_${Date.now()}`,
+      speaker: "assistant",
+      time: now.slice(11, 16),
+      text: payload.question,
+    };
+    const existingChat = Array.isArray(sessionData.chat) ? sessionData.chat : [];
+    const questions = Object.entries(payload.answers || {}).map(([id, answer]) => ({
+      id,
+      question: GPM_ITEMS.find((item) => item.id === id)?.prompt || id,
+      answer: String(answer),
+      confidence: id === "free_response" || id === "trigger" ? 0.72 : 0.66,
+    }));
+    const patch = cleanForFirestore({
+      chat: [...existingChat, patientMessage, assistantMessage],
+      survey: {
+        ...(sessionData.survey || {}),
+        status: payload.can_submit ? "completed" : "in_progress",
+        finalGpmScore: payload.gpm_raw_score,
+        adjustedGpmScore: payload.gpm_adjusted_score,
+        adjustmentReason: "Updated from conversational questionnaire response.",
+        questions,
+        answers: payload.answers,
+      },
+      scores: [
+        ...(sessionData.scores || []).filter((score) => !["GPM raw", "GPM adjusted"].includes(score.name)),
+        {
+          name: "GPM raw",
+          score: payload.gpm_raw_score,
+          scale: "0-42",
+          severity: payload.gpm_raw_score >= 26 ? "high" : payload.gpm_raw_score >= 13 ? "moderate" : "low",
+          note: "Inferred from questionnaire dialogue",
+        },
+        {
+          name: "GPM adjusted",
+          score: payload.gpm_adjusted_score,
+          scale: "0-100",
+          severity: payload.gpm_adjusted_score >= 70 ? "high" : payload.gpm_adjusted_score >= 30 ? "moderate" : "low",
+          note: "GPM raw score multiplied by 2.38",
+        },
+      ],
+      updatedAt: now,
+    });
+    await db.collection("patients").doc(patientId).collection("sessions").doc(sessionId).set(patch, { merge: true });
+    await db.collection("pain_sessions").doc(sessionId).set({ patientId, sessionId, ...patch }, { merge: true });
+    return { ok: true, patientId };
+  } catch (error) {
+    console.error("questionnaire_turn_write_failed", error);
+    return { ok: false, error: error.message };
+  }
+}
+
 async function toolResult(req, name, args) {
   let payload;
   const enrichedArgs =
@@ -1265,6 +1627,8 @@ async function toolResult(req, name, args) {
         prompt_opinion_context: fhirContext(req),
       };
     }
+  } else if (name === TOOL_NAMES.computePainScore) {
+    payload = await computePainScorePayload(req, args);
   } else {
     return null;
   }
@@ -1339,7 +1703,7 @@ exports.mcp = onRequest(
     secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
   },
   async (req, res) => {
-    if (!authorizedByApiKey(req)) {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
       return sendJson(res, 401, { error: "unauthorized" });
     }
 
@@ -1420,6 +1784,93 @@ exports.authorizePatientAccess = onRequest(
   },
 );
 
+exports.connect = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    cors: true,
+    secrets: [PAIN_MCP_API_KEY],
+  },
+  async (req, res) => {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
+      return sendJson(res, 401, { error: "unauthorized" });
+    }
+    if (req.method !== "POST") {
+      return sendJson(res, 405, { error: "method_not_allowed" });
+    }
+    return sendJson(res, 200, {
+      accepted: true,
+      server_time_utc: nowIso(),
+      live_samples_path: "/v1/live-samples",
+      historical_import_path: "/v1/runs/import-jsonl",
+      score_path: "/v1/pain-score",
+      activation_window_count: 10,
+      activation_threshold_count: 7,
+      dropout_signals: [],
+    });
+  },
+);
+
+exports.liveSamples = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    cors: true,
+    secrets: [PAIN_MCP_API_KEY],
+  },
+  async (req, res) => {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
+      return sendJson(res, 401, { error: "unauthorized" });
+    }
+    if (req.method !== "POST") {
+      return sendJson(res, 405, { error: "method_not_allowed" });
+    }
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const samples = Array.isArray(body.samples) ? body.samples.slice(-100) : [];
+    const patient = body.patient ? patientFromWatchPayload(body) : null;
+    if (patient) await persistPatient(patient);
+    const patientId = patient?.id || body.patient_id || body.patientId || null;
+    const sessionId = body.questionnaire_session_id || body.session_id || body.sessionId || null;
+    const persistResult = await persistLiveSamples(patientId, sessionId, samples);
+    const computed = computePainScoreFromVitals(samples, {});
+    return sendJson(res, 200, {
+      accepted: true,
+      run_id: body.run_id || body.runID || null,
+      patient_id: patientId,
+      session_id: sessionId,
+      rows_received: samples.length,
+      firestore_written: persistResult.ok,
+      scores: [computed],
+      dropout_signals: [],
+      generated_at: nowIso(),
+    });
+  },
+);
+
+exports.painScore = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    cors: true,
+    secrets: [PAIN_MCP_API_KEY],
+  },
+  async (req, res) => {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
+      return sendJson(res, 401, { error: "unauthorized" });
+    }
+    if (req.method !== "POST") {
+      return sendJson(res, 405, { error: "method_not_allowed" });
+    }
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const payload = await computePainScorePayload(req, body);
+    const persisted = await persistRecomputedScore(payload.patient_id, payload.session_id, payload);
+    return sendJson(res, payload.allowed === false ? 403 : 200, {
+      ...payload,
+      firestore_written: persisted.ok,
+    });
+  },
+);
+
 exports.patientSummary = onRequest(
   {
     region: "us-central1",
@@ -1460,7 +1911,7 @@ exports.createPatient = onRequest(
     secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
   },
   async (req, res) => {
-    if (!authorizedByApiKey(req)) {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
       return sendJson(res, 401, { error: "unauthorized" });
     }
 
@@ -1557,7 +2008,7 @@ exports.continueQuestionnaire = onRequest(
     secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
   },
   async (req, res) => {
-    if (!authorizedByApiKey(req)) {
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
       return sendJson(res, 401, { error: "unauthorized" });
     }
 
@@ -1566,13 +2017,18 @@ exports.continueQuestionnaire = onRequest(
     }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    const answers = inferAnswersFromResponse(body.response, body.answers || {});
+    const sessionId = body.session_id || body.questionnaire_session_id || body.local_session_id || stableSessionId();
+    const existingTopSession = await db.collection("pain_sessions").doc(sessionId).get();
+    const existingAnswers = existingTopSession.exists ? existingTopSession.data()?.survey?.answers || {} : {};
+    const responseText = body.response || body.response_text || "";
+    const answers = inferAnswersFromResponse(responseText, body.answers || existingAnswers);
     const payload = questionnairePayload(req, {
-      session_id: body.session_id,
+      session_id: sessionId,
       local_session_id: body.local_session_id,
       answers,
       pain_score: body.pain_score,
     });
+    const persistResult = await persistQuestionnaireTurn(sessionId, responseText, payload);
 
     return sendJson(res, 200, {
       accepted: true,
@@ -1586,7 +2042,12 @@ exports.continueQuestionnaire = onRequest(
       completion_0_1: payload.completion_0_1,
       can_submit: payload.can_submit,
       missing_fields: payload.missing_fields,
+      answers: payload.answers,
+      gpm_raw_score: payload.gpm_raw_score,
+      gpm_adjusted_score: payload.gpm_adjusted_score,
       revised_scores: payload.revised_scores,
+      firestore_written: persistResult.ok,
+      patient_id: persistResult.patientId,
     });
   },
 );

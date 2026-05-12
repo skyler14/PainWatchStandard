@@ -329,6 +329,7 @@ const authzConfig = {
   endpoint: "/api/promptopinion/authorize-patient-access",
   registryEndpoint: "/api/registry",
   patientSummaryEndpoint: "/api/patient-summary",
+  painScoreEndpoint: "/v1/pain-score",
   workspaceId: import.meta.env.VITE_PROMPTOPINION_WORKSPACE_ID,
 };
 
@@ -355,6 +356,31 @@ async function fetchPatientSummary(groupId: string, patientId: string): Promise<
     throw new Error("summary_unavailable");
   }
   return (await response.json()) as PatientSummary;
+}
+
+async function computePainScore(groupId: string, patientId: string, sessionId: string): Promise<PatientSummary> {
+  const response = await fetch(authzConfig.painScoreEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Dashboard-Client": "pain-dashboard",
+    },
+    body: JSON.stringify({
+      clinician_group_id: groupId,
+      patient_id: patientId,
+      session_id: sessionId,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("pain_score_unavailable");
+  }
+  const body = await response.json();
+  return {
+    patient_id: body.patient_id,
+    patient_name: body.patient_name,
+    summary: body.summary,
+    latest_incident_at: body.generated_at,
+  };
 }
 
 async function checkPatientAccess(groupId: string, patientId: string): Promise<AccessDecision> {
@@ -530,11 +556,17 @@ function App() {
       policy: "registered_fhir_patient_scope",
     } satisfies AccessDecision);
 
-  const requestSummary = async () => {
+  const requestSummary = async (prompt = "") => {
     setIsLoadingSummary(true);
     try {
-      const summary = await fetchPatientSummary(selectedGroup.id, patient.id);
+      const wantsPainRecompute = /\b(recompute|compute|score|rescore)\b.*\bpain\b|\bpain\b.*\b(recompute|compute|score|rescore)\b/i.test(prompt);
+      const summary = wantsPainRecompute
+        ? await computePainScore(selectedGroup.id, patient.id, incident.sessionId ?? incident.id)
+        : await fetchPatientSummary(selectedGroup.id, patient.id);
       setServiceSummary(summary);
+      if (wantsPainRecompute) {
+        await refreshRegistry();
+      }
     } catch {
       setSummaryIndex((current) => (current + 1) % incident.summaries.length);
     } finally {
@@ -1137,8 +1169,10 @@ function ConversationPanel({
   incident: PainIncident;
   summary: string;
   isLoadingSummary: boolean;
-  onRequestSummary: () => void;
+  onRequestSummary: (prompt?: string) => void;
 }) {
+  const [prompt, setPrompt] = React.useState("");
+
   return (
     <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] min-h-[720px] flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
@@ -1186,12 +1220,17 @@ function ConversationPanel({
           <p className="text-sm text-emerald-900">{summary}</p>
         </div>
         <div className="flex gap-2">
-          <Button className="shrink-0" variant="secondary" isDisabled={isLoadingSummary} onPress={onRequestSummary}>
+          <Button className="shrink-0" variant="secondary" isDisabled={isLoadingSummary} onPress={() => onRequestSummary(prompt)}>
             <RefreshCw size={16} />
-            {isLoadingSummary ? "Summarizing" : "Summarize"}
+            {isLoadingSummary ? "Working" : "Ask"}
           </Button>
           <TextField fullWidth name="summary-prompt">
-            <TextArea placeholder="Ask for a narrower session summary..." rows={1} />
+            <TextArea
+              placeholder="Ask for a summary, or type compute pain / recompute pain..."
+              rows={1}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+            />
           </TextField>
           <Button isIconOnly aria-label="Search conversation" variant="tertiary">
             <Search size={16} />

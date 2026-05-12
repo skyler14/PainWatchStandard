@@ -40,7 +40,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     @Published private(set) var questionnaireText = "Questionnaire idle"
     @Published private(set) var questionnaireNoticeVisible = false
     @Published private(set) var questionnaireActive = false
-    @Published private(set) var currentQuestionText = "<text here>"
+    @Published private(set) var currentQuestionText = "Tell me what happened when the pain started, where you felt it, and what it felt like."
     @Published var questionnaireResponseText = "" {
         didSet {
             resetQuestionSilenceCountdown()
@@ -428,10 +428,16 @@ final class RecordingViewModel: NSObject, ObservableObject {
                 }
             }
 
-            guard settings.liveFeedEnabled else { return }
+            let shouldStreamPainSession = activeRemoteQuestionnaireSessionID != nil || questionnaireActive || questionnaireNoticeVisible
+            guard settings.liveFeedEnabled || shouldStreamPainSession else { return }
             do {
                 let client = UploadClient(configuration: settings.uploadConfiguration)
-                guard let response = try await client.submitLive(samples: [sample], run: run) else { return }
+                guard let response = try await client.submitLive(
+                    samples: [sample],
+                    run: run,
+                    patient: selectedPatient,
+                    questionnaireSessionID: activeRemoteQuestionnaireSessionID
+                ) else { return }
                 await MainActor.run {
                     self.apply(response: response)
                 }
@@ -1024,8 +1030,8 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
     private static let patientStoreKey = "PainThermometerPatientsOnDevice"
     private static let questionnairePrompts = [
-        "<text here>",
-        "<text here>",
-        "<text here>"
+        "Tell me what happened when the pain started, where you felt it, and what it felt like.",
+        "How much did this pain affect walking, stairs, dressing, sleep, or daily activities?",
+        "On a zero to ten scale, how bad is the pain now and on average this week?"
     ]
 }

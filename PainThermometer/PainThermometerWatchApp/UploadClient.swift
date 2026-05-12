@@ -49,12 +49,20 @@ struct UploadClient {
         return try await post(payload, to: url)
     }
 
-    func submitLive(samples: [SensorSampleRow], run: RecordingRun) async throws -> LiveSamplesResponse? {
+    func submitLive(
+        samples: [SensorSampleRow],
+        run: RecordingRun,
+        patient: PatientProfile? = nil,
+        questionnaireSessionID: String? = nil
+    ) async throws -> LiveSamplesResponse? {
         guard !samples.isEmpty, let url = endpointURL(path: configuration.liveSamplesPath) else { return nil }
         let payload = LiveSamplesPayload(
             runID: run.id,
             deviceID: run.deviceID,
             sentAt: Date(),
+            patientID: patient?.id,
+            patient: patient,
+            questionnaireSessionID: questionnaireSessionID,
             samples: samples
         )
         return try await post(payload, to: url)

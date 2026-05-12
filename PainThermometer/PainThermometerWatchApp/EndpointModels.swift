@@ -62,6 +62,9 @@ struct LiveSamplesPayload: Codable, Sendable {
     let runID: UUID
     let deviceID: UUID
     let sentAt: Date
+    let patientID: UUID?
+    let patient: PatientProfile?
+    let questionnaireSessionID: String?
     let samples: [SensorSampleRow]
 
     enum CodingKeys: String, CodingKey {
@@ -70,6 +73,9 @@ struct LiveSamplesPayload: Codable, Sendable {
         case runID = "run_id"
         case deviceID = "device_id"
         case sentAt = "sent_at"
+        case patientID = "patient_id"
+        case patient
+        case questionnaireSessionID = "questionnaire_session_id"
         case samples
     }
 }
