@@ -205,7 +205,7 @@ inference_flow/models/pain-thermometer-phase3-final-v1/model.joblib
 ```text
 URL: https://<deployment-host>/mcp
 Transport: Streamable HTTP
-Auth: Deployment-specific
+Auth: None
 ```
 
 Register in Prompt Opinion:
@@ -215,6 +215,18 @@ Register in Prompt Opinion:
 3. Add the `/mcp` endpoint.
 4. Enable optional FHIR context if the questionnaire should attach to the active patient.
 5. Attach the MCP server to a patient-scoped BYO agent.
+
+The live deployed endpoint for this repo is:
+
+```text
+https://pain-thermometer-po.web.app/mcp
+```
+
+Copy/paste-ready PromptOpinion setup assets live in:
+
+```text
+promptopinion-assets/painthermometer/
+```
 
 ---
 

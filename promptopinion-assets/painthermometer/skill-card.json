@@ -1,0 +1,22 @@
+{
+  "id": "painthermometer-watch-pain-followup",
+  "name": "PainThermometer Watch Pain Follow-up",
+  "description": "Review Apple Watch pain-trigger sessions, recompute pain and stress scores from recent vitals, and conduct a conversational Geriatric Pain Measure follow-up.",
+  "tags": ["pain", "watch", "fhir", "geriatric-pain-measure", "mcp"],
+  "examples": [
+    "Show me my patients with PainThermometer sessions.",
+    "Summarize the latest pain incident for this patient.",
+    "Recompute pain for the current session.",
+    "Continue the GPM follow-up for the active pain incident."
+  ],
+  "input_modes": ["text"],
+  "output_modes": ["text", "application/json"],
+  "requires_fhir_context": false,
+  "recommended_scope": "patient",
+  "mcp_server": {
+    "name": "PainThermometer",
+    "url": "https://pain-thermometer-po.web.app/mcp",
+    "transport": "streamable_http",
+    "authentication": "none"
+  }
+}

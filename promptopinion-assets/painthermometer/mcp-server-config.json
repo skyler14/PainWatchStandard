@@ -1,0 +1,28 @@
+{
+  "friendly_name": "PainThermometer",
+  "endpoint": "https://pain-thermometer-po.web.app/mcp",
+  "transport_type": "streamable_http",
+  "authentication": {
+    "type": "none"
+  },
+  "fhir_context": {
+    "enable": true,
+    "extension": "ai.promptopinion/fhir-context",
+    "scopes": [
+      { "name": "patient/Patient.rs", "required": false },
+      { "name": "patient/Observation.rs", "required": false },
+      { "name": "patient/Observation.cu", "required": false },
+      { "name": "patient/QuestionnaireResponse.rs", "required": false },
+      { "name": "patient/QuestionnaireResponse.cu", "required": false }
+    ]
+  },
+  "tools": [
+    "start_questionnaire",
+    "get_questionnaire",
+    "continue_dialogue",
+    "submit_questionnaire_answers",
+    "list_patients",
+    "summarize_patient_history",
+    "compute_pain_score"
+  ]
+}

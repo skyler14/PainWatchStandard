@@ -41,6 +41,10 @@ persist sessions keyed by `run_id`, `device_id`, and trigger timestamp.
 1. Deploy the server so the Prompt Opinion backend can reach `/mcp`.
 2. In Prompt Opinion, go to `Configuration -> MCP Servers` and add the public
    MCP URL.
+   - Friendly name: `PainThermometer`
+   - Endpoint: `https://pain-thermometer-po.web.app/mcp`
+   - Transport: `Streamable HTTP`
+   - Authentication: `None`
 3. Continue through the initialize step. The server declares
    `ai.promptopinion/fhir-context` with optional Patient, Observation, and
    QuestionnaireResponse scopes.

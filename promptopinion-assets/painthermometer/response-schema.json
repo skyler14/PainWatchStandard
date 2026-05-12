@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PainThermometerClinicianResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "patient_id": { "type": ["string", "null"] },
+    "session_id": { "type": ["string", "null"] },
+    "summary": { "type": "string" },
+    "watch_scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "score": { "type": "number" },
+          "scale": { "type": "string" },
+          "severity": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "questionnaire": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "completion_0_1": { "type": "number" },
+        "can_submit": { "type": "boolean" },
+        "missing_fields": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "next_question": { "type": ["string", "null"] }
+      }
+    },
+    "recommended_next_action": { "type": "string" }
+  },
+  "required": ["summary", "recommended_next_action"]
+}

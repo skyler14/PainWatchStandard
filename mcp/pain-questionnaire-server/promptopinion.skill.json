@@ -11,9 +11,7 @@
     "url": "https://pain-thermometer-po.web.app/mcp",
     "transport": "streamable_http",
     "authentication": {
-      "type": "api_key",
-      "header": "x-api-key",
-      "secret_name": "PAIN_MCP_API_KEY"
+      "type": "none"
     },
     "tools": [
       "start_questionnaire",
@@ -21,7 +19,8 @@
       "continue_dialogue",
       "submit_questionnaire_answers",
       "list_patients",
-      "summarize_patient_history"
+      "summarize_patient_history",
+      "compute_pain_score"
     ],
     "extensions": {
       "ai.promptopinion/fhir-context": {
