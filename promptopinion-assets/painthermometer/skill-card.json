@@ -26,6 +26,7 @@
   "mcp_server": {
     "name": "PainThermometer",
     "url": "https://pain-thermometer-po.web.app/mcp",
+    "promptopinion_agent_mcp_url": "https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp",
     "transport": "streamable_http",
     "authentication": "none"
   }

@@ -6,6 +6,14 @@ Endpoint:
 https://pain-thermometer-po.web.app/mcp
 ```
 
+PromptOpinion agent MCP proxy endpoint:
+
+```text
+https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp
+```
+
+The proxy is sessionful for direct tests. Call `initialize`, read the `Mcp-Session-Id` response header, then include `Mcp-Session-Id` for `tools/list` and `tools/call`.
+
 Transport:
 
 ```text

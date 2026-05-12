@@ -2,6 +2,33 @@
 
 These calls should work without an API key because the MCP server is configured with no PromptOpinion-side password/auth header.
 
+## PromptOpinion Agent Proxy
+
+The currently attached BYO agent exposes a PromptOpinion MCP proxy here:
+
+```text
+https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp
+```
+
+That proxy is sessionful. Start with `initialize`, then copy the `Mcp-Session-Id` response header into subsequent requests.
+
+```bash
+curl -i -sS \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"init","method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"painthermometer-smoke","version":"1.0"}}}' \
+  https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp
+```
+
+Then:
+
+```bash
+curl -fsSL \
+  -H 'Content-Type: application/json' \
+  -H 'Mcp-Session-Id: <session id from initialize response header>' \
+  -d '{"jsonrpc":"2.0","id":"tools","method":"tools/list","params":{}}' \
+  https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp
+```
+
 ## Tools List
 
 ```bash

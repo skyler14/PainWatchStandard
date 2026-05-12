@@ -15,6 +15,14 @@ Transport Type: Streamable HTTP
 Authentication Type: None
 ```
 
+After the server is attached to the current BYO agent, PromptOpinion exposes it through this agent-specific MCP proxy:
+
+```text
+https://app.promptopinion.ai/api/workspaces/019e0f28-64cc-7b65-b713-2ea3cb1a3756/ai-agents/019e1e5e-3d9a-71aa-8951-c890499ca9a8/mcp
+```
+
+I verified that proxy initializes and lists the PainThermometer tools. Direct MCP testing against the proxy is sessionful: call `initialize` first, capture the `Mcp-Session-Id` response header, then include that header for `tools/list` and `tools/call`.
+
 After clicking `Continue`, PromptOpinion should send `initialize` to the server. The server advertises the PromptOpinion FHIR context extension and these optional scopes:
 
 ```text
