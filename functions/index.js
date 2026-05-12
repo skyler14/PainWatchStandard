@@ -322,6 +322,69 @@ async function loadPatientsFromFirestore() {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
+async function fhirSearch(resourceType, query = "") {
+  const baseUrl = secretValue(PROMPTOPINION_FHIR_BASE_URL).replace(/\/$/, "");
+  const apiKey = secretValue(PROMPTOPINION_API_KEY);
+  if (!baseUrl || !apiKey) return { ok: false, skipped: true, entries: [] };
+  const url = `${baseUrl}/${encodeURIComponent(resourceType)}${query ? `?${query}` : ""}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/fhir+json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+  const text = await response.text();
+  let parsed = {};
+  try {
+    parsed = text ? JSON.parse(text) : {};
+  } catch {
+    parsed = {};
+  }
+  return {
+    ok: response.ok,
+    status: response.status,
+    entries: Array.isArray(parsed.entry) ? parsed.entry.map((entry) => entry.resource).filter(Boolean) : [],
+    error: response.ok ? undefined : text.slice(0, 240),
+  };
+}
+
+function patientFromFhirResource(resource, existingPatients = []) {
+  if (!resource?.id) return null;
+  const existing = existingPatients.find((patient) => patient.fhirPatientId === resource.id || patient.id === resource.id);
+  if (existing) return existing;
+  const humanName = Array.isArray(resource.name) ? resource.name[0] : null;
+  const given = Array.isArray(humanName?.given) ? humanName.given.join(" ") : "";
+  const family = humanName?.family || "";
+  const displayName = humanName?.text || [given, family].filter(Boolean).join(" ") || `FHIR Patient ${resource.id}`;
+  return {
+    id: safeId(`fhir-${resource.id}`, "fhir-patient"),
+    fhirPatientId: resource.id,
+    name: displayName,
+    firstName: given || displayName,
+    lastName: family || "",
+    assignedGroupIds: [DOCTOR_A_GROUP_ID],
+    primaryGroupId: DOCTOR_A_GROUP_ID,
+    source: "prompt_opinion_fhir",
+    createdAt: resource.meta?.lastUpdated || nowIso(),
+    updatedAt: resource.meta?.lastUpdated || nowIso(),
+  };
+}
+
+async function loadPatientsFromFhir(existingPatients = []) {
+  try {
+    const result = await fhirSearch("Patient", "_count=100");
+    if (!result.ok) {
+      if (!result.skipped) console.warn("patient_fhir_search_failed", result.status, result.error);
+      return [];
+    }
+    return result.entries.map((resource) => patientFromFhirResource(resource, existingPatients)).filter(Boolean);
+  } catch (error) {
+    console.warn("patient_fhir_search_failed", error.message);
+    return [];
+  }
+}
+
 async function loadSessionsForPatient(patientId) {
   const snapshot = await db
     .collection("patients")
@@ -352,7 +415,14 @@ async function loadPatient(patientId) {
 async function loadAllPatients() {
   try {
     const patients = await loadPatientsFromFirestore();
-    if (patients.length) return patients;
+    const fhirPatients = await loadPatientsFromFhir(patients);
+    const merged = [...patients];
+    for (const patient of fhirPatients) {
+      if (!merged.some((candidate) => candidate.id === patient.id || candidate.fhirPatientId === patient.fhirPatientId)) {
+        merged.push(patient);
+      }
+    }
+    if (merged.length) return merged;
     await ensureSeedData();
     const seededPatients = await loadPatientsFromFirestore();
     if (seededPatients.length) return seededPatients;
@@ -363,9 +433,10 @@ async function loadAllPatients() {
 }
 
 async function groupCanReadPatient(groupId, patientId) {
+  const normalizedGroupId = normalizeDoctorGroupId(groupId);
   const patients = await loadAllPatients();
   const patient = patients.find((candidate) => candidate.id === patientId);
-  return Boolean(patient?.assignedGroupIds.includes(groupId));
+  return Boolean(patient?.assignedGroupIds.includes(normalizedGroupId));
 }
 
 async function buildGroupsPayload() {
@@ -404,6 +475,7 @@ async function buildGroupsPayload() {
         fhirPatientId: patient.fhirPatientId,
         name: patient.name,
         age: patient.age ?? null,
+        source: patient.source,
         assignedGroupIds: patient.assignedGroupIds,
         sessions: patient.sessions,
         incidents: patient.incidents,
@@ -895,21 +967,27 @@ function toolsList() {
 }
 
 async function visiblePatientsForGroup(groupId) {
+  const normalizedGroupId = normalizeDoctorGroupId(groupId);
   const patients = await loadAllPatients();
   const visible = [];
   for (const patient of patients) {
-    if (!groupId || (await groupCanReadPatient(groupId, patient.id))) {
+    if (!normalizedGroupId || (await groupCanReadPatient(normalizedGroupId, patient.id))) {
       visible.push(patient);
     }
   }
-  return visible.map((patient) => ({
+  return Promise.all(visible.map(async (patient) => {
+    const sessions = await loadSessionsForPatient(patient.id).catch(() => []);
+    const count = sessions.length || patient.sessionCount || 0;
+    return {
       id: patient.id,
       fhir_patient_id: patient.fhirPatientId,
       name: patient.name,
       age: patient.age ?? null,
-      session_count: patient.sessionCount ?? (patient.id === TEST_PATIENT_ID ? 1 : 0),
-      incident_count: patient.sessionCount ?? (patient.id === TEST_PATIENT_ID ? 1 : 0),
-    }));
+      source: patient.source,
+      session_count: count,
+      incident_count: count,
+    };
+  }));
 }
 
 async function ensureSeedData() {
@@ -1700,13 +1778,9 @@ exports.mcp = onRequest(
     region: "us-central1",
     timeoutSeconds: 60,
     cors: true,
-    secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
+    secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL],
   },
   async (req, res) => {
-    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
-      return sendJson(res, 401, { error: "unauthorized" });
-    }
-
     if (req.method === "GET") {
       return sendJson(res, 200, {
         ok: true,

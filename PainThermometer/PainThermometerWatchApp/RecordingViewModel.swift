@@ -47,7 +47,13 @@ final class RecordingViewModel: NSObject, ObservableObject {
         }
     }
     @Published private(set) var selectedQuestionnaireSessionID: UUID?
-    @Published private(set) var dialogueMessages: [QuestionnaireDialogueMessage] = []
+    @Published private(set) var dialogueMessages: [QuestionnaireDialogueMessage] = [] {
+        didSet {
+            if let activeQuestionnaireSessionID {
+                dialogueMessagesBySession[activeQuestionnaireSessionID] = dialogueMessages
+            }
+        }
+    }
     @Published private(set) var isRecordingQuestionnaireResponse = false
     @Published private(set) var responseSilenceProgress = 0.0
     @Published private(set) var speakingProgress = 0.0
@@ -85,6 +91,8 @@ final class RecordingViewModel: NSObject, ObservableObject {
     private var activeQuestionnaireStartedAt: Date?
     private var activeQuestionnaireResponseCount = 0
     private var activeQuestionnaireCompletion = 0.0
+    private var dialogueMessagesBySession: [UUID: [QuestionnaireDialogueMessage]] = [:]
+    private var pendingBackendMessageID: UUID?
 
     override init() {
         let settings = EndpointSettings.load()
@@ -595,7 +603,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
         questionIndex = 0
         currentQuestionText = Self.questionnairePrompts[questionIndex]
         questionnaireResponseText = ""
-        dialogueMessages = [
+        dialogueMessages = dialogueMessagesBySession[session.id] ?? [
             QuestionnaireDialogueMessage(
                 speaker: .system,
                 text: currentQuestionText,
@@ -676,8 +684,19 @@ final class RecordingViewModel: NSObject, ObservableObject {
                 timeText: Self.shortTimeFormatter.string(from: Date())
             )
         )
+        let pendingID = UUID()
+        pendingBackendMessageID = pendingID
+        dialogueMessages.append(
+            QuestionnaireDialogueMessage(
+                id: pendingID,
+                speaker: .system,
+                text: "Sending response...",
+                timeText: Self.shortTimeFormatter.string(from: Date())
+            )
+        )
         questionnaireResponseText = ""
         transcriptText = ""
+        questionnaireText = "Waiting for response"
         recordQuestionnaireSessionSummary()
         if let activeQuestionnaireSessionID, let activeRemoteQuestionnaireSessionID {
             Task {
@@ -693,6 +712,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     }
 
     private func appendNextLocalQuestion() {
+        removePendingBackendMessage()
         questionIndex = min(questionIndex + 1, Self.questionnairePrompts.count - 1)
         currentQuestionText = Self.questionnairePrompts[questionIndex]
         activeQuestionnaireCompletion = min(1, activeQuestionnaireCompletion + 0.12)
@@ -725,6 +745,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
             }
         } catch {
             await MainActor.run {
+                self.removePendingBackendMessage()
                 self.questionnaireText = "Questionnaire offline"
                 self.appendNextLocalQuestion()
             }
@@ -744,6 +765,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
     }
 
     private func apply(questionnaireResponse response: ContinueQuestionnaireResponse, remoteSessionID: String) {
+        removePendingBackendMessage()
         activeRemoteQuestionnaireSessionID = remoteSessionID
         activeQuestionnaireCompletion = response.completion01 ?? activeQuestionnaireCompletion
         questionnaireCanSubmit = response.canSubmit ?? (activeQuestionnaireCompletion >= 0.8)
@@ -760,6 +782,12 @@ final class RecordingViewModel: NSObject, ObservableObject {
             )
         )
         speakCurrentQuestion()
+    }
+
+    private func removePendingBackendMessage() {
+        guard let pendingBackendMessageID else { return }
+        dialogueMessages.removeAll { $0.id == pendingBackendMessageID }
+        self.pendingBackendMessageID = nil
     }
 
     private func submitPainTriggerIfNeeded(score: ScoreResult, snapshot: PainActivationSnapshot) {

@@ -445,7 +445,11 @@ function App() {
   );
   const doctorA = groups.find((group) => group.id === doctorAGroup.id) ?? doctorAGroup;
   const selectedGroup = groups.find((candidate) => candidate.id === selectedGroupId) ?? doctorA;
-  const visiblePatients = selectedGroup.patients.length ? selectedGroup.patients : doctorA.patients;
+  const visiblePatients = registryLive
+    ? selectedGroup.patients
+    : selectedGroup.patients.length
+      ? selectedGroup.patients
+      : doctorA.patients;
   const patient =
     visiblePatients.find((candidate) => candidate.id === selectedPatientId) ??
     visiblePatients[0] ??
