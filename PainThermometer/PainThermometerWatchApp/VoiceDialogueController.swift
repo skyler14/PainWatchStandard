@@ -70,15 +70,35 @@ final class VoiceDialogueController: NSObject, ObservableObject {
         }
         switch speechStatus {
         case .authorized:
+            #if os(watchOS)
+            status = speechRecognizer?.isAvailable == true ? "Speech ready" : "System dictation ready"
+            #else
             status = "Speech ready"
+            #endif
         case .denied:
+            #if os(watchOS)
+            status = "System dictation ready"
+            #else
             status = "Speech denied"
+            #endif
         case .restricted:
+            #if os(watchOS)
+            status = "System dictation ready"
+            #else
             status = "Speech restricted"
+            #endif
         case .notDetermined:
+            #if os(watchOS)
+            status = "System dictation ready"
+            #else
             status = "Speech not determined"
+            #endif
         @unknown default:
+            #if os(watchOS)
+            status = "System dictation ready"
+            #else
             status = "Speech unavailable"
+            #endif
         }
         #else
         #if os(watchOS)
