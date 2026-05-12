@@ -55,6 +55,13 @@ type PainIncident = {
   sessionType?: string;
   patientId?: string;
   clinicianGroupId?: string;
+  fhirWritten?: boolean;
+  fhirResources?: {
+    encounterId?: string | null;
+    observationIds?: string[];
+    questionnaireResponseId?: string | null;
+    documentReferenceId?: string | null;
+  };
   startedAt: string;
   durationMinutes: number;
   sourceDevice: string;
@@ -815,6 +822,9 @@ function PatientOverview({
           <Chip color="danger" size="sm" variant="soft">
             <Chip.Label>Pain detected {incident.activation.positiveWindows}/{incident.activation.windowCount}</Chip.Label>
           </Chip>
+          <Chip color={incident.fhirWritten ? "success" : "warning"} size="sm" variant="soft">
+            <Chip.Label>{incident.fhirWritten ? "FHIR written" : "FHIR pending"}</Chip.Label>
+          </Chip>
         </Card.Header>
         <Card.Content>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -823,6 +833,13 @@ function PatientOverview({
             <MetricTile label="GPM raw" value={`${incident.survey.finalGpmScore}/42`} />
             <MetricTile label="Adjusted" value={`${incident.survey.adjustedGpmScore}/100`} />
           </div>
+          {incident.fhirResources ? (
+            <p className="mt-4 font-mono text-xs text-slate-500">
+              FHIR Encounter/{incident.fhirResources.encounterId ?? "pending"} · Observation x
+              {incident.fhirResources.observationIds?.length ?? 0} · QuestionnaireResponse/
+              {incident.fhirResources.questionnaireResponseId ?? "pending"}
+            </p>
+          ) : null}
           <p className="mt-4 text-sm text-slate-600">{incident.survey.adjustmentReason}</p>
         </Card.Content>
       </Card>
@@ -857,6 +874,7 @@ function SessionAggregatePanel({
     : 0;
   const maxAdjusted = adjustedScores.length ? Math.max(...adjustedScores) : 0;
   const completedCount = sessions.filter((session) => session.survey.status === "completed").length;
+  const fhirCount = sessions.filter((session) => session.fhirWritten).length;
 
   return (
     <Card variant="default" className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -875,6 +893,7 @@ function SessionAggregatePanel({
           <MetricTile label="Avg pain" value={`${averagePain}%`} />
           <MetricTile label="Max GPM adjusted" value={`${maxAdjusted}/100`} />
           <MetricTile label="Completed surveys" value={`${completedCount}`} />
+          <MetricTile label="FHIR sessions" value={`${fhirCount}`} />
         </div>
         <div className="grid gap-2">
           {sessions.map((session) => {

@@ -332,6 +332,16 @@ async function loadSessionsForPatient(patientId) {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
+async function loadPatient(patientId) {
+  try {
+    const snapshot = await db.collection("patients").doc(patientId).get();
+    return snapshot.exists ? { id: snapshot.id, ...snapshot.data() } : null;
+  } catch (error) {
+    console.warn("patient_firestore_doc_read_failed", error.message);
+    return null;
+  }
+}
+
 async function loadAllPatients() {
   try {
     const patients = await loadPatientsFromFirestore();
@@ -787,6 +797,229 @@ function fhirPatientResource(patient) {
   };
 }
 
+function fhirPatientReference(patientId, fhirPatientId) {
+  return {
+    reference: `Patient/${fhirPatientId || patientId}`,
+    identifier: {
+      system: "https://pain-thermometer-po.web.app/patient-id",
+      value: patientId,
+    },
+  };
+}
+
+function fhirLocalIdentifier(type, value) {
+  return {
+    system: `https://pain-thermometer-po.web.app/${type}`,
+    value,
+  };
+}
+
+function fhirPainEncounterResource(patientId, fhirPatientId, session) {
+  return {
+    resourceType: "Encounter",
+    status: "in-progress",
+    class: {
+      system: "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      code: "AMB",
+      display: "ambulatory",
+    },
+    identifier: [fhirLocalIdentifier("pain-session-id", session.sessionId)],
+    subject: fhirPatientReference(patientId, fhirPatientId),
+    period: {
+      start: session.startedAt,
+    },
+    type: [
+      {
+        coding: [
+          {
+            system: "https://pain-thermometer-po.web.app/session-type",
+            code: "watch-pain-incident",
+            display: "PainThermometer watch pain incident",
+          },
+        ],
+        text: "PainThermometer watch pain incident",
+      },
+    ],
+  };
+}
+
+function fhirObservationResource(patientId, fhirPatientId, encounterId, session, options) {
+  const value = Number(options.value);
+  return {
+    resourceType: "Observation",
+    status: "preliminary",
+    identifier: [fhirLocalIdentifier(options.identifierType || "observation-id", `${session.sessionId}-${options.code}`)],
+    category: [
+      {
+        coding: [
+          {
+            system: "http://terminology.hl7.org/CodeSystem/observation-category",
+            code: options.category || "survey",
+            display: options.categoryDisplay || "Survey",
+          },
+        ],
+      },
+    ],
+    code: {
+      coding: [
+        {
+          system: options.system || "https://pain-thermometer-po.web.app/observation-code",
+          code: options.code,
+          display: options.display,
+        },
+      ],
+      text: options.display,
+    },
+    subject: fhirPatientReference(patientId, fhirPatientId),
+    encounter: encounterId ? { reference: `Encounter/${encounterId}` } : undefined,
+    effectiveDateTime: session.startedAt,
+    valueQuantity: Number.isFinite(value)
+      ? {
+          value,
+          unit: options.unit || "1",
+          system: options.unitSystem || "http://unitsofmeasure.org",
+          code: options.unitCode || "1",
+        }
+      : undefined,
+    note: options.note ? [{ text: options.note }] : undefined,
+  };
+}
+
+function fhirQuestionnaireResponseResource(patientId, fhirPatientId, encounterId, session) {
+  return {
+    resourceType: "QuestionnaireResponse",
+    status: session.survey?.status === "completed" ? "completed" : "in-progress",
+    subject: fhirPatientReference(patientId, fhirPatientId),
+    authored: session.startedAt,
+    item: [
+      {
+        linkId: "opening_prompt",
+        text: "Initial conversational pain follow-up prompt",
+        answer: [{ valueString: session.chat?.[0]?.text || "What happened, and where did you feel the pain most clearly?" }],
+      },
+    ],
+  };
+}
+
+function fhirDocumentReferenceResource(patientId, fhirPatientId, encounterId, session) {
+  const summary = (session.summaries || []).join("\n");
+  return {
+    resourceType: "DocumentReference",
+    status: "current",
+    identifier: [fhirLocalIdentifier("pain-session-summary-id", session.sessionId)],
+    subject: fhirPatientReference(patientId, fhirPatientId),
+    context: encounterId ? { encounter: [{ reference: `Encounter/${encounterId}` }] } : undefined,
+    date: nowIso(),
+    type: {
+      coding: [
+        {
+          system: "https://pain-thermometer-po.web.app/document-type",
+          code: "pain-session-summary",
+          display: "PainThermometer session summary",
+        },
+      ],
+      text: "PainThermometer session summary",
+    },
+    content: [
+      {
+        attachment: {
+          contentType: "text/plain",
+          data: Buffer.from(summary || "PainThermometer session started.").toString("base64"),
+          title: `PainThermometer session ${session.sessionId}`,
+        },
+      },
+    ],
+  };
+}
+
+async function persistPainSessionToFhir(patientId, fhirPatientId, session) {
+  const result = {
+    ok: false,
+    encounterId: null,
+    observationIds: [],
+    questionnaireResponseId: null,
+    documentReferenceId: null,
+    errors: [],
+  };
+  try {
+    const encounter = await fhirPost("Encounter", fhirPainEncounterResource(patientId, fhirPatientId, session));
+    if (encounter.ok) {
+      result.encounterId = encounter.id;
+    } else {
+      result.errors.push({ resource: "Encounter", status: encounter.status, error: encounter.error });
+    }
+
+    const triggerScore = Number(session.activation?.triggerScore ?? 0);
+    const observations = [
+      fhirObservationResource(patientId, fhirPatientId, result.encounterId, session, {
+        code: "pain-likelihood",
+        display: "Pain likelihood",
+        value: Math.round(triggerScore * 100),
+        unit: "%",
+        unitCode: "%",
+        note: "PainThermometer watch model trigger score.",
+      }),
+      fhirObservationResource(patientId, fhirPatientId, result.encounterId, session, {
+        code: "activation-positive-windows",
+        display: "Pain activation positive windows",
+        value: session.activation?.positiveWindows ?? 0,
+        category: "exam",
+        categoryDisplay: "Exam",
+        note: `Positive windows out of ${session.activation?.windowCount ?? 10}.`,
+      }),
+      ...((session.vitalsWindow?.sensors_present || []).slice(0, 12).map((sensor) =>
+        fhirObservationResource(patientId, fhirPatientId, result.encounterId, session, {
+          code: `sensor-coverage-${sensor.sensor}`,
+          display: `${sensor.sensor} coverage`,
+          value: Math.round((sensor.coverage_0_1 || 0) * 100),
+          unit: "%",
+          unitCode: "%",
+          category: "vital-signs",
+          categoryDisplay: "Vital Signs",
+          identifierType: "sensor-coverage-id",
+          note: `${sensor.count} samples in the trigger buffer.`,
+        }),
+      )),
+    ];
+
+    for (const observation of observations) {
+      const posted = await fhirPost("Observation", observation);
+      if (posted.ok) {
+        result.observationIds.push(posted.id);
+      } else {
+        result.errors.push({ resource: "Observation", status: posted.status, error: posted.error });
+      }
+    }
+
+    const questionnaire = await fhirPost(
+      "QuestionnaireResponse",
+      fhirQuestionnaireResponseResource(patientId, fhirPatientId, result.encounterId, session),
+    );
+    if (questionnaire.ok) {
+      result.questionnaireResponseId = questionnaire.id;
+    } else {
+      result.errors.push({ resource: "QuestionnaireResponse", status: questionnaire.status, error: questionnaire.error });
+    }
+
+    const document = await fhirPost(
+      "DocumentReference",
+      fhirDocumentReferenceResource(patientId, fhirPatientId, result.encounterId, session),
+    );
+    if (document.ok) {
+      result.documentReferenceId = document.id;
+    } else {
+      result.errors.push({ resource: "DocumentReference", status: document.status, error: document.error });
+    }
+
+    result.ok = Boolean(
+      result.encounterId || result.observationIds.length || result.questionnaireResponseId || result.documentReferenceId,
+    );
+  } catch (error) {
+    result.errors.push({ resource: "FHIR", error: error.message });
+  }
+  return result;
+}
+
 async function fhirPost(resourceType, resource) {
   const baseUrl = secretValue(PROMPTOPINION_FHIR_BASE_URL).replace(/\/$/, "");
   const apiKey = secretValue(PROMPTOPINION_API_KEY);
@@ -948,14 +1181,26 @@ function sessionFromPainTrigger(body, payload, patientId) {
   };
 }
 
-async function persistPainSession(patientId, session) {
+async function persistPainSession(patientId, session, fhirResult = null) {
   try {
+    const sessionWithFhir = fhirResult
+      ? {
+          ...session,
+          fhirResources: {
+            encounterId: fhirResult.encounterId,
+            observationIds: fhirResult.observationIds,
+            questionnaireResponseId: fhirResult.questionnaireResponseId,
+            documentReferenceId: fhirResult.documentReferenceId,
+          },
+          fhirWritten: fhirResult.ok,
+        }
+      : session;
     const patientRef = db.collection("patients").doc(patientId);
     const sessionRef = patientRef.collection("sessions").doc(session.sessionId);
     await db.runTransaction(async (transaction) => {
       const sessionSnapshot = await transaction.get(sessionRef);
-      transaction.set(sessionRef, cleanForFirestore(session), { merge: true });
-      transaction.set(db.collection("pain_sessions").doc(session.sessionId), cleanForFirestore(session), { merge: true });
+      transaction.set(sessionRef, cleanForFirestore(sessionWithFhir), { merge: true });
+      transaction.set(db.collection("pain_sessions").doc(session.sessionId), cleanForFirestore(sessionWithFhir), { merge: true });
       transaction.set(
         patientRef,
         {
@@ -1266,12 +1511,15 @@ exports.painTrigger = onRequest(
       score_history: body.score_history,
     });
     const patient = body.patient ? patientFromWatchPayload(body) : null;
+    let patientPersistResult = null;
     if (patient) {
-      await persistPatient(patient);
+      patientPersistResult = await persistPatient(patient);
     }
     const patientId = patient?.id || body.patient_id || TEST_PATIENT_ID;
     const session = sessionFromPainTrigger(body, payload, patientId);
-    const sessionPersistResult = await persistPainSession(patientId, session);
+    const storedPatient = patient || (await loadPatient(patientId)) || {};
+    const fhirResult = await persistPainSessionToFhir(patientId, storedPatient.fhirPatientId, session);
+    const sessionPersistResult = await persistPainSession(patientId, session, fhirResult);
 
     return sendJson(res, 200, {
       accepted: true,
@@ -1289,6 +1537,14 @@ exports.painTrigger = onRequest(
       doctor_group_id: DOCTOR_A_GROUP_ID,
       patient_id: patientId,
       firestore_written: sessionPersistResult.ok,
+      patient_firestore_written: patientPersistResult?.firestore?.ok,
+      fhir_written: fhirResult.ok,
+      fhir_resources: {
+        encounter_id: fhirResult.encounterId,
+        observation_ids: fhirResult.observationIds,
+        questionnaire_response_id: fhirResult.questionnaireResponseId,
+        document_reference_id: fhirResult.documentReferenceId,
+      },
     });
   },
 );
