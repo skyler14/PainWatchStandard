@@ -41,7 +41,8 @@ actor LocalCoreMLPainScorer {
         }
 
         guard !painLikelihoods.isEmpty else { return nil }
-        let painLikelihood = painLikelihoods.reduce(0, +) / Double(painLikelihoods.count)
+        let rawPainLikelihood = painLikelihoods.reduce(0, +) / Double(painLikelihoods.count)
+        let painLikelihood = calibrateWatchPainLikelihood(rawPainLikelihood)
         let quality = qualityScore(from: window.dropoutSignals)
         let confidence = min(0.95, max(0.05, 0.5 * quality + abs(painLikelihood - 0.5)))
 
@@ -56,7 +57,7 @@ actor LocalCoreMLPainScorer {
             baselineDeparture01: nil,
             windowStartUTC: window.windowStartUTC,
             windowEndUTC: window.windowEndUTC,
-            modelVersion: "pain-thermometer-dropout-ensemble/watch_friendly",
+            modelVersion: "pain-thermometer-dropout-ensemble/watch_friendly_calibrated_v1",
             dropoutSignals: window.dropoutSignals
         )
     }
@@ -78,6 +79,19 @@ actor LocalCoreMLPainScorer {
     private func qualityScore(from dropoutSignals: [DropoutSignal]) -> Double {
         let missingCount = dropoutSignals.filter { $0.present == false || ($0.validFrac ?? 1) <= 0 }.count
         return min(1, max(0.2, 1 - 0.07 * Double(missingCount)))
+    }
+
+    private func calibrateWatchPainLikelihood(_ raw: Double) -> Double {
+        let clamped = min(1, max(0, raw))
+        if clamped <= 0.62 {
+            return clamped * 0.45
+        }
+        if clamped <= 0.84 {
+            let t = (clamped - 0.62) / 0.22
+            return 0.28 + pow(t, 1.15) * 0.47
+        }
+        let t = (clamped - 0.84) / 0.16
+        return min(0.99, 0.75 + t * 0.24)
     }
 }
 
