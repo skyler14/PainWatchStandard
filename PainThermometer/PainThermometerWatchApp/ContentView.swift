@@ -419,15 +419,28 @@ private struct QuestionnaireSessionCard: View {
                 }
 
                 if recorder.isRecordingQuestionnaireResponse {
-                    VStack(alignment: .leading, spacing: 4) {
-                        TextField("Transcript", text: $recorder.questionnaireResponseText)
-                            .font(.caption)
+                    VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Label("Dictating", systemImage: "waveform")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(recorder.questionnaireResponseText.isEmpty ? "Listening..." : recorder.questionnaireResponseText)
+                                .font(.caption)
+                                .foregroundStyle(recorder.questionnaireResponseText.isEmpty ? .secondary : .primary)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, minHeight: 34, alignment: .topLeading)
+                                .padding(6)
+                                .background(Color.secondary.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
+                        }
                         ProgressView(value: recorder.responseSilenceProgress)
                             .progressViewStyle(.linear)
                         Button {
                             recorder.stopQuestionnaireResponseRecording()
                         } label: {
-                            Label("Stop", systemImage: "stop.fill")
+                            Label(
+                                recorder.questionnaireResponseText.isEmpty ? "Stop" : "Send",
+                                systemImage: recorder.questionnaireResponseText.isEmpty ? "stop.fill" : "paperplane.fill"
+                            )
                         }
                     }
                 } else {

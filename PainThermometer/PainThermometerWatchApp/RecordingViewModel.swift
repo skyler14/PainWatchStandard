@@ -522,6 +522,7 @@ final class RecordingViewModel: NSObject, ObservableObject {
         voiceStatusText = voiceController.status
         transcriptText = voiceController.transcript
         if started {
+            questionnaireText = "Listening"
             startSilenceCountdown()
         } else {
             isRecordingQuestionnaireResponse = false
@@ -634,29 +635,33 @@ final class RecordingViewModel: NSObject, ObservableObject {
 
     private func finalizeQuestionnaireResponse() {
         guard questionnaireActive else { return }
-        silenceTimer?.invalidate()
-        silenceTimer = nil
-        silenceProgressTimer?.invalidate()
-        silenceProgressTimer = nil
+        stopSilenceCountdown()
         isRecordingQuestionnaireResponse = false
         voiceController.stopListening()
         voiceStatusText = voiceController.status
         responseSilenceProgress = 0
 
         let response = questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !response.isEmpty {
-            activeQuestionnaireResponseCount += 1
-            dialogueMessages.append(
-                QuestionnaireDialogueMessage(
-                    speaker: .patient,
-                    text: response,
-                    timeText: Self.shortTimeFormatter.string(from: Date())
-                )
-            )
+        guard !response.isEmpty else {
+            questionnaireResponseText = ""
+            transcriptText = ""
+            questionnaireText = "No speech detected"
+            recordQuestionnaireSessionSummary()
+            return
         }
+
+        activeQuestionnaireResponseCount += 1
+        dialogueMessages.append(
+            QuestionnaireDialogueMessage(
+                speaker: .patient,
+                text: response,
+                timeText: Self.shortTimeFormatter.string(from: Date())
+            )
+        )
         questionnaireResponseText = ""
+        transcriptText = ""
         recordQuestionnaireSessionSummary()
-        if let activeQuestionnaireSessionID, let activeRemoteQuestionnaireSessionID, !response.isEmpty {
+        if let activeQuestionnaireSessionID, let activeRemoteQuestionnaireSessionID {
             Task {
                 await continueRemoteQuestionnaire(
                     remoteSessionID: activeRemoteQuestionnaireSessionID,
@@ -832,9 +837,16 @@ final class RecordingViewModel: NSObject, ObservableObject {
         startSilenceCountdown()
     }
 
-    private func startSilenceCountdown() {
+    private func stopSilenceCountdown() {
         silenceTimer?.invalidate()
+        silenceTimer = nil
         silenceProgressTimer?.invalidate()
+        silenceProgressTimer = nil
+        silenceStartedAt = nil
+    }
+
+    private func startSilenceCountdown() {
+        stopSilenceCountdown()
         guard questionnaireActive else { return }
         silenceStartedAt = Date()
         responseSilenceProgress = 1
