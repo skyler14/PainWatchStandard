@@ -124,6 +124,7 @@ struct UploadClient {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("watch", forHTTPHeaderField: "X-PainThermometer-Client")
         if let bearerToken = configuration.bearerToken {
             request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
         }

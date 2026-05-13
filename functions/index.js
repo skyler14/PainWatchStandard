@@ -305,6 +305,10 @@ function authorizedByApiKey(req) {
   return apiKey === expected || bearer === `Bearer ${expected}`;
 }
 
+function authorizedWatchClient(req, body = {}) {
+  return req.get("x-painthermometer-client") === "watch" && body.source === "PainThermometerWatchApp";
+}
+
 function normalizeDoctorGroupId(value) {
   if (!value) return DOCTOR_A_GROUP_ID;
   const normalized = String(value).toLowerCase().replaceAll("-", "_");
@@ -1985,7 +1989,8 @@ exports.createPatient = onRequest(
     secrets: [PROMPTOPINION_API_KEY, PROMPTOPINION_FHIR_BASE_URL, PAIN_MCP_API_KEY],
   },
   async (req, res) => {
-    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard") {
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    if (!authorizedByApiKey(req) && req.get("x-dashboard-client") !== "pain-dashboard" && !authorizedWatchClient(req, body)) {
       return sendJson(res, 401, { error: "unauthorized" });
     }
 
@@ -1993,7 +1998,6 @@ exports.createPatient = onRequest(
       return sendJson(res, 405, { error: "method_not_allowed" });
     }
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const patient = patientFromWatchPayload(body);
     const persistResult = await persistPatient(patient);
     return sendJson(res, 200, {
