@@ -414,6 +414,7 @@ private struct QuestionnaireTab: View {
 
 private struct QuestionnaireSessionCard: View {
     @EnvironmentObject private var recorder: RecordingViewModel
+    @FocusState private var responseFieldFocused: Bool
     let session: QuestionnaireSessionSummary
 
     private var isOpen: Bool {
@@ -473,9 +474,16 @@ private struct QuestionnaireSessionCard: View {
                             TextField("Type response", text: $recorder.questionnaireResponseText)
                                 .font(.caption)
                                 .textInputAutocapitalization(.sentences)
-                                .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
-                                .padding(6)
-                                .background(Color.secondary.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
+                                .focused($responseFieldFocused)
+                                .submitLabel(.send)
+                                .onSubmit {
+                                    if !recorder.questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        recorder.stopQuestionnaireResponseRecording()
+                                    }
+                                }
+                                .onAppear {
+                                    responseFieldFocused = true
+                                }
                         }
                         HStack {
                             Button {
@@ -491,6 +499,9 @@ private struct QuestionnaireSessionCard: View {
                             }
                             .disabled(recorder.questionnaireResponseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
+                    }
+                    .onChange(of: recorder.isRecordingQuestionnaireResponse) { isRecording in
+                        responseFieldFocused = isRecording
                     }
                 } else {
                     HStack {
