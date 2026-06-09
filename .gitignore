@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.DS_Store
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+*.parquet
+*.joblib
+*.zip
+_normalized/

@@ -1,0 +1,5 @@
+workout_type,workouts,duration_min_median,duration_min_mean,total_energy_median,total_distance_median
+HKWorkoutActivityTypeCycling,61,15.62827616930008,17.088723840348706,,
+HKWorkoutActivityTypeOther,8,4.34608230193456,25.727873996645215,,
+HKWorkoutActivityTypeTraditionalStrengthTraining,35,98.38518321712812,105.8208453068279,,
+HKWorkoutActivityTypeWalking,75,25.85435558358828,31.558024858580698,,

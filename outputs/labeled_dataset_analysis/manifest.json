@@ -1,0 +1,232 @@
+{
+  "multimodal_pain_label_distribution_full": {
+    "columns": [
+      "pain_type",
+      "pain_scale",
+      "rows",
+      "subjects"
+    ],
+    "rows": 14
+  },
+  "multimodal_pain_label_distribution_sample": {
+    "columns": [
+      "pain_type",
+      "pain_scale",
+      "pain_bin",
+      "rows",
+      "subjects"
+    ],
+    "rows": 1
+  },
+  "multimodal_pain_sensor_by_pain_bin_sample": {
+    "columns": [
+      "pain_type",
+      "pain_bin",
+      "bvp__count",
+      "bvp__median",
+      "bvp__mean",
+      "bvp__std",
+      "eda__count",
+      "eda__median",
+      "eda__mean",
+      "eda__std",
+      "temperature__count",
+      "temperature__median",
+      "temperature__mean",
+      "temperature__std",
+      "x__count",
+      "x__median",
+      "x__mean",
+      "x__std",
+      "y__count",
+      "y__median",
+      "y__mean",
+      "y__std",
+      "z__count",
+      "z__median",
+      "z__mean",
+      "z__std"
+    ],
+    "rows": 1
+  },
+  "painmonit_sensor_by_pain_bin": {
+    "columns": [
+      "subject",
+      "trial",
+      "pain_bin",
+      "bvp__count",
+      "bvp__median",
+      "bvp__mean",
+      "bvp__std",
+      "eda_e4__count",
+      "eda_e4__median",
+      "eda_e4__mean",
+      "eda_e4__std",
+      "tmp__count",
+      "tmp__median",
+      "tmp__mean",
+      "tmp__std",
+      "resp__count",
+      "resp__median",
+      "resp__mean",
+      "resp__std",
+      "eda_rb__count",
+      "eda_rb__median",
+      "eda_rb__mean",
+      "eda_rb__std",
+      "bvp_rb__count",
+      "bvp_rb__median",
+      "bvp_rb__mean",
+      "bvp_rb__std",
+      "emg__count",
+      "emg__median",
+      "emg__mean",
+      "emg__std",
+      "grip__count",
+      "grip__median",
+      "grip__mean",
+      "grip__std"
+    ],
+    "rows": 63
+  },
+  "painmonit_session_distribution": {
+    "columns": [
+      "subject",
+      "trial",
+      "rows",
+      "pain_nonnull",
+      "pain_min",
+      "pain_median",
+      "pain_max",
+      "labels"
+    ],
+    "rows": 18
+  },
+  "physiopain_label_distribution_full": {
+    "columns": [
+      "pain_type",
+      "pain_scale",
+      "rows",
+      "subjects"
+    ],
+    "rows": 14
+  },
+  "physiopain_label_distribution_sample": {
+    "columns": [
+      "pain_type",
+      "pain_scale",
+      "pain_bin",
+      "rows",
+      "subjects"
+    ],
+    "rows": 1
+  },
+  "physiopain_sensor_by_pain_bin_sample": {
+    "columns": [
+      "pain_type",
+      "pain_bin",
+      "bvp__count",
+      "bvp__median",
+      "bvp__mean",
+      "bvp__std",
+      "eda__count",
+      "eda__median",
+      "eda__mean",
+      "eda__std",
+      "temperature__count",
+      "temperature__median",
+      "temperature__mean",
+      "temperature__std",
+      "x__count",
+      "x__median",
+      "x__mean",
+      "x__std",
+      "y__count",
+      "y__median",
+      "y__mean",
+      "y__std",
+      "z__count",
+      "z__median",
+      "z__mean",
+      "z__std"
+    ],
+    "rows": 1
+  },
+  "rheumapain_label_distribution": {
+    "columns": [
+      "exercise_rest",
+      "pain_scale",
+      "pain_bin",
+      "rows",
+      "subjects"
+    ],
+    "rows": 11
+  },
+  "rheumapain_sensor_by_pain_bin": {
+    "columns": [
+      "exercise_rest",
+      "pain_bin",
+      "bvp__count",
+      "bvp__median",
+      "bvp__mean",
+      "bvp__std",
+      "eda__count",
+      "eda__median",
+      "eda__mean",
+      "eda__std",
+      "temperature__count",
+      "temperature__median",
+      "temperature__mean",
+      "temperature__std",
+      "x__count",
+      "x__median",
+      "x__mean",
+      "x__std",
+      "y__count",
+      "y__median",
+      "y__mean",
+      "y__std",
+      "z__count",
+      "z__median",
+      "z__mean",
+      "z__std"
+    ],
+    "rows": 6
+  },
+  "silver_label_distribution": {
+    "columns": [
+      "cohort",
+      "painlevel",
+      "pain_bin",
+      "rows",
+      "subjects",
+      "trials",
+      "sections",
+      "segments"
+    ],
+    "rows": 105
+  },
+  "silver_sensor_by_pain_bin": {
+    "columns": [
+      "cohort",
+      "pain_bin",
+      "bvp__count",
+      "bvp__median",
+      "bvp__mean",
+      "bvp__std",
+      "eda__count",
+      "eda__median",
+      "eda__mean",
+      "eda__std",
+      "temperature__count",
+      "temperature__median",
+      "temperature__mean",
+      "temperature__std",
+      "hr__count",
+      "hr__median",
+      "hr__mean",
+      "hr__std"
+    ],
+    "rows": 10
+  }
+}

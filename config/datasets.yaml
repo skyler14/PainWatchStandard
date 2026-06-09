@@ -1,0 +1,321 @@
+version: 0.1
+root: /Users/skyler/Downloads/PainDatasets
+policy:
+  source_archives_immutable: true
+  extraction: stream_from_zip
+  derived_format: parquet_zstd
+  default_window:
+    cadence_hz: 1
+    trailing_seconds: 30
+  label_routing:
+    direct_pain: trains_pain_heads
+    stress_proxy: trains_stress_state_only
+    exercise_context: trains_activity_state_only
+    baseline_context: trains_archetype_state_only
+    unlabeled: representation_or_qc_only
+  sensor_presence_policy:
+    use_as: mask_quality_and_calibration
+    do_not_use_as: direct_state_evidence
+
+datasets:
+  catsa:
+    archive: CATSA.zip
+    status: existing_recipe_updated
+    source_kind: zip_tree_csv
+    import_recipe: catsa_empatica_task_tree
+    paths:
+      pattern: CATSA/{subject_id}/{condition}/{sensor}.csv
+    subjects: about_50
+    sensors:
+      acc: {columns: [x, y, z], sample_rate_hz: 32}
+      bvp: {columns: [value], sample_rate_hz: 64}
+      eda: {columns: [value], sample_rate_hz: 4}
+      hr: {columns: [value], sample_rate_hz: 1}
+      temperature: {columns: [value], sample_rate_hz: 4}
+    labels:
+      family: baseline_context_or_cognitive_load_proxy
+      condition_map:
+        Baseline: relaxed_baseline
+        Logic: cognitive_load
+        Nback: cognitive_load
+        Stroop: cognitive_load
+        Sudoku: cognitive_load
+      pain_truth: false
+    use:
+      - archetype_baseline_learning
+      - cognitive_stress_auxiliary
+      - sensor_normalization
+
+  painmonit:
+    archive: PainMonit Database.zip
+    aliases: [PainMonit.zip]
+    status: existing_recipe_needs_archive_rename
+    source_kind: nested_zip_csv
+    import_recipe: painmonit_pmcd_pmed
+    nested_archives:
+      PMCD.zip:
+        status: implemented_for_clinical_main_in_old_repo
+        paths:
+          main_csv_pattern: "**/raw-data/P{subject}_{trial}/P{subject}_{trial}.csv"
+          runup_csv_pattern: "**/*_runup.csv"
+          thresholds: [noPainThreshold.txt, severePainThreshold.txt]
+        delimiter: semicolon
+        decimal: comma
+        sample_rate_hz: 250
+        sensors:
+          bvp: Bvp
+          eda: Eda_E4
+          temperature: Tmp
+          respiration: Resp
+          eda_rb: Eda_RB
+          bvp_rb: Bvp_RB
+          emg: Emg
+          grip: Grip
+        labels:
+          pain_intensity: Pain rates
+          pain_class: Pain labels
+          scale: nrs_0_10
+          granularity: sparse_sample_timeseries
+          family: direct_pain
+          confidence: 0.75
+        next:
+          - add_runup_as_person_archetype_baseline
+      PMED.zip:
+        status: not_yet_normalized
+        sensors:
+          bvp: Bvp
+          eda: Eda_E4
+          temperature: Tmp
+          ibi: Ibi
+          hr: Hr
+          respiration: Resp
+          eda_rb: Eda_RB
+          ecg: Ecg
+          emg: Emg
+          heater: Heater_C
+        labels:
+          pain_intensity: COVAS
+          stimulus: Heater_cleaned
+          family: direct_pain_experimental_heat
+          confidence: 0.8
+    use:
+      - strongest_direct_pain
+      - clinical_pain_timeseries
+      - runup_baseline_future
+
+  rheumapain:
+    archive: RheumaPain Dataset.zip
+    status: existing_recipe
+    source_kind: zip_processed_csv_plus_workbook
+    import_recipe: rheumapain_processed_frequency
+    paths:
+      processed_pattern: RheumaPain Dataset/RheumaPain/Biosignal Data/Processed Data/{frequency}Hz/{subject}.csv
+      demographics: RheumaPain Dataset/RheumaPain/Demographic Data/patients.xlsx
+    canonical_frequency_hz: 64
+    sensors:
+      bvp: bvp
+      eda: eda
+      acc: [x, y, z]
+      temperature: temperature
+    labels:
+      pain_intensity: pain_scale
+      workbook_pain_rest: pain_scale_rest
+      workbook_pain_exercise: pain_scale_exercise
+      scale: wong_baker_faces_0_10
+      granularity: weak_session
+      family: direct_pain
+      confidence: 0.35
+    archetypes:
+      rest: relaxed_or_passive_pain_rest
+      exercise: exertion_context
+    use:
+      - weak_direct_pain
+      - rest_vs_exercise_archetype
+
+  physiopain_watch:
+    archive: PhysioPain Dataset.zip
+    aliases: [Multimodal Pain Dataset.zip]
+    status: old_phase_used_all_window_recipe_but_cleanroom_needs_normalizer
+    source_kind: processed_watch_csv
+    import_recipe: physiopain_watch_processed
+    preferred_path: PhysioPain Dataset/Multimodal Pain Dataset/PROCESSED WATCH DATA/combined/combined_all_data/all_watch_data_64hz.csv
+    alternate_paths:
+      - "**/PROCESSED WATCH DATA/*/signal_16/*_16Hz.csv"
+      - "**/PROCESSED WATCH DATA/combined/combined_all_data/all_watch_data_{4,8,16,32,64}hz.csv"
+    sensors:
+      bvp: bvp
+      eda: eda
+      acc: [x, y, z]
+      temperature: temperature
+    labels:
+      pain_intensity: pain_scale
+      pain_type: pain_type
+      subject: person_id
+      scale: source_scale_verify_before_0_10_mapping
+      granularity: processed_sample_or_segment
+      family: direct_pain
+      confidence: 0.55
+    survey:
+      paths:
+        - "**/SURVEY DATA/survey_answers_en.xlsx"
+        - "**/SURVEY DATA/survey_answers_tr.xlsx"
+      use: subject_covariates_and_pain_type_validation
+    use:
+      - direct_pain_watch_like
+      - pain_type_stratification
+
+  physiopain_eeg:
+    archive: PhysioPain Dataset.zip
+    aliases: [Multimodal Pain Dataset.zip]
+    status: existing_phase_auxiliary
+    source_kind: processed_eeg_csv
+    import_recipe: physiopain_eeg_processed_1hz
+    paths:
+      pattern: "**/PROCESSED EEG DATA/1Hz/{pain_type}_1hz/{subject}.csv"
+      raw_pattern: "**/RAW EEG DATA (1Hz)/**/{subject}.csv"
+    sensors:
+      eeg_delta: Delta
+      eeg_theta: Theta
+      eeg_alpha1: Alpha1
+      eeg_alpha2: Alpha2
+      eeg_beta1: Beta1
+      eeg_beta2: Beta2
+      eeg_gamma1: Gamma1
+      eeg_gamma2: Gamma2
+      eeg_attention: Attention
+      eeg_meditation: Meditation
+    labels:
+      pain_intensity: pain_intensity
+      pain_type: pain_version
+      family: pain_context_unlabeled_or_direct_if_validated
+      note: keep separate from watch head unless alignment proven
+    use:
+      - optional_multimodal_branch
+      - pain_type_context
+
+  silver_pain:
+    archive: SILVER-Pain Dataset.zip
+    status: new_dataset_promising
+    source_kind: merged_csv_plus_raw_extracts
+    import_recipe: silver_pain_merged_csv
+    paths:
+      older: SILVER-Pain Dataset/data/older_adults/older_adults.csv
+      young: SILVER-Pain Dataset/data/young_adults/young_adults.csv
+      experiment_time:
+        - SILVER-Pain Dataset/data/older_adults/experiment_time.csv
+        - SILVER-Pain Dataset/data/young_adults/experiment_time.csv
+      raw_extract_pattern: SILVER-Pain Dataset/data/{cohort}/extraction_from_original_files/{subject}/{subject}_{sensor}.csv
+    sensors:
+      bvp: bvp
+      eda: eda
+      temperature: temperature
+      hr: hr
+    labels:
+      pain_intensity: PainLevel
+      trial: Trial
+      section: section
+      segment: segment
+      family: direct_pain
+      scale: verify_from_readme
+      granularity: experiment_segment_or_sample
+      confidence: 0.65
+    cohorts:
+      older_adults: older_adults.csv
+      young_adults: young_adults.csv
+    use:
+      - direct_pain_new
+      - age_domain_transfer
+      - bvp_eda_temp_hr_watch_like_without_acc
+
+  wesad:
+    archive: WESAD.zip
+    status: existing_recipe
+    source_kind: nested_e4_zip_plus_quest_plus_respiban
+    import_recipe: wesad_e4_and_protocol
+    paths:
+      e4_nested: WESAD/{subject}/{subject}_E4_Data.zip
+      questionnaire: WESAD/{subject}/{subject}_quest.csv
+      respiban: WESAD/{subject}/{subject}_respiban.txt
+      pkl: WESAD/{subject}/{subject}.pkl
+    sensors:
+      e4: [acc, bvp, eda, hr, ibi, temperature]
+      respiban_optional: [ecg, eda, emg, temperature, acc, respiration]
+    labels:
+      family: stress_proxy
+      protocol_states: [baseline, amusement, meditation, tsst_stress, recovery]
+      pain_truth: false
+    use:
+      - stress_auxiliary
+      - archetype_state_pretraining
+      - chest_sensor_optional
+
+  induced_stress_exercise:
+    archive: wearable-device-dataset-from-induced-stress-and-structured-exercise-sessions-1.0.1.zip
+    status: existing_recipe
+    source_kind: empatica_activity_tree
+    import_recipe: induced_stress_exercise_e4
+    paths:
+      pattern: wearable-device-dataset-from-induced-stress-and-structured-exercise-sessions-1.0.1/Wearable_Dataset/{activity}/{subject}/{sensor}.csv
+      stress_labels: [Stress_Level_v1.csv, Stress_Level_v2.csv]
+    sensors:
+      acc: ACC.csv
+      bvp: BVP.csv
+      eda: EDA.csv
+      hr: HR.csv
+      ibi: IBI.csv
+      temperature: TEMP.csv
+    labels:
+      activity: activity
+      stress: stress_level_files
+      family: exercise_context_and_stress_proxy
+      pain_truth: false
+    use:
+      - exercise_archetype
+      - exertion_vs_stress_separation
+
+  wearable_sports_health:
+    archive: Wearable Sports Health Monitoring Dataset.zip
+    aliases: [archive(1).zip]
+    status: existing_recipe_weak_synthetic_like
+    source_kind: single_csv_zip
+    import_recipe: wearable_sports_health_csv
+    path: wearable_sports_health_dataset.csv
+    sensors:
+      hr: heart_rate
+      body_temperature: body_temperature
+      spo2: spo2
+      steps: steps
+      bp: [systolic, diastolic]
+    labels:
+      activity_status: activity_status
+      family: exercise_context
+      pain_truth: false
+    use:
+      - low_priority_activity_context
+      - schema_coverage_only
+
+  apple_health_personal_export:
+    archive: /Users/skyler/Downloads/pain datasets/export.zip
+    status: personal_calibration_reference
+    source_kind: apple_health_export_xml_zip
+    import_recipe: apple_health_archetypes_streaming
+    script: scripts/apple_health_archetypes.py
+    natural_metrics:
+      resting_heart_rate: HKQuantityTypeIdentifierRestingHeartRate
+      walking_heart_rate_average: HKQuantityTypeIdentifierWalkingHeartRateAverage
+      hrv_sdnn: HKQuantityTypeIdentifierHeartRateVariabilitySDNN
+      respiratory_rate: HKQuantityTypeIdentifierRespiratoryRate
+      oxygen_saturation: HKQuantityTypeIdentifierOxygenSaturation
+      physical_effort: HKQuantityTypeIdentifierPhysicalEffort
+      vo2max: HKQuantityTypeIdentifierVO2Max
+      heart_rate_recovery: HKQuantityTypeIdentifierHeartRateRecoveryOneMinute
+    derived_archetypes:
+      sleep: sleep_segments + heart_rate
+      awake_nonworkout: heart_rate excluding sleep/workout/stand
+      standing: stand_time + heart_rate
+      workout_or_exercise: workout/exercise_time + heart_rate
+      recovery: post_workout_hr_recovery
+    use:
+      - personal_sensor_archetype_baselines
+      - smartwatch_input_design
+      - calibration_bucket_design

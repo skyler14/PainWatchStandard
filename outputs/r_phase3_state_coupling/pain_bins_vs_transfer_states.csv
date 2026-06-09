@@ -1,0 +1,5 @@
+"pain_bins","stress_transfer","activity_transfer","baseline_departure_transfer","pain_pref_norm"
+"zero",0.6526,1,0.3248,0.1873
+"mild",0.7727,1,0.332,0.1898
+"moderate",0.9877,1,0.2811,0.2211
+"severe",0.9881,1,0.2812,0.234

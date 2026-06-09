@@ -1,0 +1,15 @@
+pain_type,pain_scale,rows,subjects
+back_pain,2.0,700323,4
+back_pain,3.0,1108626,5
+back_pain,4.0,508871,2
+back_pain,5.0,177056,1
+headache,1.0,171552,1
+headache,2.0,572650,3
+headache,3.0,1113645,5
+headache,4.0,183058,1
+headache,5.0,169600,1
+menstrual_pain,2.0,189536,1
+menstrual_pain,3.0,170144,2
+menstrual_pain,4.0,158336,2
+menstrual_pain,5.0,449058,3
+no_pain,1.0,1375850,8

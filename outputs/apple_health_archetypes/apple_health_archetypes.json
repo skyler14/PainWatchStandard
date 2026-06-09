@@ -1,0 +1,156 @@
+{
+  "derived_heart_rate_archetypes": {
+    "awake_nonworkout": {
+      "mean": 80.17730258083654,
+      "median": 76.0,
+      "n": 10113,
+      "p10": 67.0,
+      "p90": 100.0
+    },
+    "sleep": {
+      "mean": 63.76286743317903,
+      "median": 63.0,
+      "n": 6697,
+      "p10": 55.0,
+      "p90": 73.0
+    },
+    "standing": {
+      "mean": 108.36125088848827,
+      "median": 108.0,
+      "n": 3883,
+      "p10": 84.20000000000005,
+      "p90": 133.0
+    },
+    "workout_or_exercise": {
+      "mean": 116.05584445398198,
+      "median": 118.0,
+      "n": 100189,
+      "p10": 72.0,
+      "p90": 151.0
+    }
+  },
+  "exercise_time_segments": 8295,
+  "natural_baseline_metrics": {
+    "heart_rate_variability_sdnn": {
+      "mean": 45.14418582554517,
+      "median": 40.0578,
+      "n": 321,
+      "p10": 24.8955,
+      "p90": 68.6553
+    },
+    "oxygen_saturation": {
+      "mean": 0.9659402654867257,
+      "median": 0.97,
+      "n": 904,
+      "p10": 0.94,
+      "p90": 0.99
+    },
+    "physical_effort": {
+      "mean": 3.74578461294542,
+      "median": 3.7,
+      "n": 25229,
+      "p10": 1.5,
+      "p90": 5.7
+    },
+    "respiratory_rate": {
+      "mean": 16.31136433631044,
+      "median": 16.0,
+      "n": 3247,
+      "p10": 15.0,
+      "p90": 18.0
+    },
+    "resting_heart_rate": {
+      "mean": 68.50515463917526,
+      "median": 67.0,
+      "n": 97,
+      "p10": 58.0,
+      "p90": 83.4
+    },
+    "vo2max": {
+      "mean": 31.724647887323947,
+      "median": 31.11,
+      "n": 71,
+      "p10": 30.48,
+      "p90": 33.36
+    },
+    "walking_heart_rate_average": {
+      "mean": 114.63679245283019,
+      "median": 116.75,
+      "n": 106,
+      "p10": 98.25,
+      "p90": 129.0
+    }
+  },
+  "record_counts": {
+    "HKCategoryTypeIdentifierAppleStandHour": 1395,
+    "HKCategoryTypeIdentifierMindfulSession": 2,
+    "HKCategoryTypeIdentifierSleepAnalysis": 3024,
+    "HKDataTypeSleepDurationGoal": 1,
+    "HKQuantityTypeIdentifierActiveEnergyBurned": 256122,
+    "HKQuantityTypeIdentifierAppleExerciseTime": 8295,
+    "HKQuantityTypeIdentifierAppleStandTime": 2910,
+    "HKQuantityTypeIdentifierAppleWalkingSteadiness": 31,
+    "HKQuantityTypeIdentifierBasalEnergyBurned": 337641,
+    "HKQuantityTypeIdentifierBodyMass": 2,
+    "HKQuantityTypeIdentifierDistanceCycling": 47107,
+    "HKQuantityTypeIdentifierDistanceWalkingRunning": 77413,
+    "HKQuantityTypeIdentifierFlightsClimbed": 3567,
+    "HKQuantityTypeIdentifierHeadphoneAudioExposure": 35316,
+    "HKQuantityTypeIdentifierHeartRate": 120882,
+    "HKQuantityTypeIdentifierHeartRateRecoveryOneMinute": 40,
+    "HKQuantityTypeIdentifierHeartRateVariabilitySDNN": 321,
+    "HKQuantityTypeIdentifierHeight": 2,
+    "HKQuantityTypeIdentifierOxygenSaturation": 904,
+    "HKQuantityTypeIdentifierPhysicalEffort": 25229,
+    "HKQuantityTypeIdentifierRespiratoryRate": 3247,
+    "HKQuantityTypeIdentifierRestingHeartRate": 97,
+    "HKQuantityTypeIdentifierSixMinuteWalkTestDistance": 17,
+    "HKQuantityTypeIdentifierStairAscentSpeed": 61,
+    "HKQuantityTypeIdentifierStairDescentSpeed": 63,
+    "HKQuantityTypeIdentifierStepCount": 37409,
+    "HKQuantityTypeIdentifierTimeInDaylight": 1328,
+    "HKQuantityTypeIdentifierVO2Max": 71,
+    "HKQuantityTypeIdentifierWalkingAsymmetryPercentage": 20330,
+    "HKQuantityTypeIdentifierWalkingDoubleSupportPercentage": 33893,
+    "HKQuantityTypeIdentifierWalkingHeartRateAverage": 106,
+    "HKQuantityTypeIdentifierWalkingSpeed": 37021,
+    "HKQuantityTypeIdentifierWalkingStepLength": 37020,
+    "Workout": 179
+  },
+  "sleep_segments": 2223,
+  "stand_time_segments": 2910,
+  "workout_summary": [
+    {
+      "duration_min_mean": 17.088723840348706,
+      "duration_min_median": 15.62827616930008,
+      "total_distance_median": NaN,
+      "total_energy_median": NaN,
+      "workout_type": "HKWorkoutActivityTypeCycling",
+      "workouts": 61
+    },
+    {
+      "duration_min_mean": 25.727873996645215,
+      "duration_min_median": 4.34608230193456,
+      "total_distance_median": NaN,
+      "total_energy_median": NaN,
+      "workout_type": "HKWorkoutActivityTypeOther",
+      "workouts": 8
+    },
+    {
+      "duration_min_mean": 105.8208453068279,
+      "duration_min_median": 98.38518321712812,
+      "total_distance_median": NaN,
+      "total_energy_median": NaN,
+      "workout_type": "HKWorkoutActivityTypeTraditionalStrengthTraining",
+      "workouts": 35
+    },
+    {
+      "duration_min_mean": 31.558024858580698,
+      "duration_min_median": 25.85435558358828,
+      "total_distance_median": NaN,
+      "total_energy_median": NaN,
+      "workout_type": "HKWorkoutActivityTypeWalking",
+      "workouts": 75
+    }
+  ]
+}

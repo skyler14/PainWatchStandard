@@ -1,0 +1,4 @@
+"dataset_id","label_family","stress_transfer","activity_transfer","baseline_departure_transfer","pain_pref_norm","max_state_pref"
+"painmonit","direct_pain",0.9875,1,0.2813,0.2284,0.2933
+"physiopain_watch","direct_pain",0.8156,1,0.2908,0.1802,0.3224
+"rheumapain","direct_pain",0.6869,1,0.3515,0.186,0.326

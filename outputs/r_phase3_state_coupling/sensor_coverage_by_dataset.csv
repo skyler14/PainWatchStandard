@@ -1,0 +1,14 @@
+"dataset_id","bvp__present","hr__present","eda__present","temperature__present","acc__present","respiration__present","emg__present","grip__present"
+"catsa",1,1,1,1,1,0,0,0
+"epm_e4",1,1,1,1,1,0,0,0
+"induced_stress_exercise",1,1,1,1,1,0,0,0
+"merged_wearable_stress",0,1,1,1,1,0,0,0
+"painmonit",1,0,1,1,0,1,1,1
+"physiopain_eeg",0,0,0,0,0,0,0,0
+"physiopain_watch",1,0,1,1,1,0,0,0
+"rheumapain",1,0,1,1,1,0,0,0
+"sample_27_9vuw",0.5,1,0.5,0.5,0.5,0.5,0,0
+"stress_reference_real",0,1,1,0,0,0,0,0
+"stress_reference_synthetic",0,1,1,0,0,0,0,0
+"wearable_sports_health",0,1,0,1,0,0,0,0
+"wesad",1,1,1,1,1,0,0,0

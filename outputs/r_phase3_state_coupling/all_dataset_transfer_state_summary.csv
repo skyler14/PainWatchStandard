@@ -1,0 +1,16 @@
+"dataset_id","label_family","pain_transfer","pain_pref_norm","stress_transfer","activity_transfer","baseline_departure_transfer","max_state_pref"
+"catsa","baseline_context",0.1404,0.2117,0.2374,1,0.054,0.3619
+"catsa","cognitive_load_proxy",0.0869,0.1783,0.9241,1,0.3056,0.3151
+"painmonit","direct_pain",0.5964,0.2284,0.9875,1,0.2813,0.2933
+"physiopain_watch","direct_pain",0.07,0.1802,0.8156,1,0.2908,0.3224
+"rheumapain","direct_pain",0.0987,0.186,0.6869,1,0.3515,0.326
+"epm_e4","emotion_proxy",0.0838,0.1827,0.7684,1,0.3218,0.3233
+"induced_stress_exercise","exercise_context",0.0987,0.1813,0.9814,1,0.1369,0.3184
+"wearable_sports_health","exercise_context",0.5643,0.263,0.5246,0,0.762,0.3077
+"physiopain_eeg","pain_context_unlabeled",0.495,0.2949,0.3687,0,0,0.2958
+"merged_wearable_stress","stress_proxy",0.0865,0.2036,0.6061,0,0.8166,0.3215
+"stress_reference_real","stress_proxy",0.5754,0.3014,0.4433,0,0,0.3019
+"stress_reference_synthetic","stress_proxy",0.5936,0.3028,0.4626,0,0,0.3033
+"wesad","stress_proxy",0.0806,0.1794,0.986,1,0.1391,0.3187
+"painmonit","unlabeled",0.5819,0.2265,0.9868,1,0.2824,0.2941
+"sample_27_9vuw","unlabeled",0.3363,0.2412,0.7199,0.5,0.0691,0.3112

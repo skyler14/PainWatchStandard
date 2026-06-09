@@ -1,0 +1,12 @@
+exercise_rest,pain_scale,pain_bin,rows,subjects
+exercise,0,zero,39101,5
+exercise,1,mild,66000,6
+exercise,2,mild,192296,12
+exercise,3,mild,153564,12
+exercise,4,moderate,128139,10
+exercise,5,moderate,32070,2
+rest,0,zero,302792,19
+rest,1,mild,181401,8
+rest,2,mild,200773,11
+rest,3,mild,59912,3
+rest,4,moderate,31183,1
