@@ -6,6 +6,23 @@ updated: 2026-06-08
 
 # Wiki Log
 
+## [2026-06-10] research | Autonomic Space Model
+
+Added autonomic-space model page covering:
+
+- RSA as cardiac vagal/PNS axis
+- PEP as lab cardiac SNS axis
+- CAB and CAR derivative scores
+- reciprocal, uncoupled, coactivation, and coinhibition modes
+- what can be derived from current PainWatchStandard data
+- what requires new hardware or protocols
+
+Touched pages:
+
+- [[model/autonomic-space-model]]
+- [[model/functional-pain-v1]]
+- [[index]]
+
 ## [2026-06-10] design | Functional Pain V1
 
 Added `functional_pain_v1` as a simple ternary display layer:

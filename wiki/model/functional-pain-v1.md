@@ -6,9 +6,13 @@ tags: [functional-pain, ternary, sympathetic, parasympathetic, homeostasis]
 source_files:
   - src/painwatchstandard/functional_pain_v1.py
   - tests/test_functional_pain_v1.py
+related:
+  - wiki/model/autonomic-space-model.md
 ---
 
 # Functional Pain V1
+
+Autonomic-space details and derivative score plan: [[model/autonomic-space-model]].
 
 Goal: show pain-relevant physiology as recoverable state, not one overconfident pain number.
 
