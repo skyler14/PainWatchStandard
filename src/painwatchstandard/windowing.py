@@ -52,6 +52,7 @@ class WindowConfig:
     window_seconds: float = 30.0
     include_partial_windows: bool = False
     min_window_rows: int = 2
+    max_gap_seconds: float | None = 2.0
 
     @property
     def step_seconds(self) -> float:
@@ -65,6 +66,28 @@ def validate_window_config(config: WindowConfig) -> None:
         raise ValueError("window_seconds must be positive")
     if config.min_window_rows < 1:
         raise ValueError("min_window_rows must be at least 1")
+    if config.max_gap_seconds is not None and config.max_gap_seconds <= 0:
+        raise ValueError("max_gap_seconds must be positive or None")
+
+
+def window_gap_diagnostics(
+    window: pd.DataFrame,
+    config: WindowConfig,
+    start: float,
+    anchor: float,
+) -> tuple[float, float, bool]:
+    times = pd.to_numeric(window["sample_offset_s"], errors="coerce").dropna().to_numpy(dtype=float)
+    if len(times) < 2:
+        return 0.0, config.max_gap_seconds or math.inf, True
+    gaps = np.diff(times)
+    positive = gaps[gaps > 0]
+    if not len(positive):
+        return 0.0, config.max_gap_seconds or math.inf, True
+    median_gap = float(np.median(positive))
+    allowed_gap = max(config.max_gap_seconds or math.inf, median_gap * 2.0)
+    boundary_gaps = np.array([max(times[0] - start, 0.0), max(anchor - times[-1], 0.0)])
+    max_gap = float(np.max(np.concatenate([positive, boundary_gaps])))
+    return max_gap, allowed_gap, max_gap <= allowed_gap
 
 
 def make_window_anchors(session: pd.DataFrame, config: WindowConfig) -> np.ndarray:
@@ -122,6 +145,9 @@ def build_windows_for_session(session: pd.DataFrame, config: WindowConfig) -> pd
         window = session.iloc[left:right]
         if len(window) < config.min_window_rows:
             continue
+        max_gap, allowed_gap, contiguous = window_gap_diagnostics(window, config, start, anchor)
+        if not contiguous:
+            continue
         row: dict[str, Any] = {
             "dataset_id": _first_valid(window["dataset_id"]) if "dataset_id" in window else None,
             "subject_id": _first_valid(window["subject_id"]) if "subject_id" in window else None,
@@ -131,6 +157,9 @@ def build_windows_for_session(session: pd.DataFrame, config: WindowConfig) -> pd
             "window_seconds": float(anchor - start),
             "target_hz": float(config.target_hz),
             "source_rows": int(len(window)),
+            "window_max_gap_s": max_gap,
+            "window_allowed_gap_s": allowed_gap,
+            "window_contiguous": 1,
         }
         for column in CONTEXT_COLUMNS:
             if column in window:

@@ -8,6 +8,7 @@ import pandas as pd
 from painwatchstandard.ingest import (
     inventory_sources,
     normalize_catsa,
+    normalize_painmonit_pmed,
     normalize_silver,
     normalize_watch_pain_archive,
 )
@@ -48,6 +49,31 @@ def test_watch_pain_archive_normalizes_direct_pain_rows(tmp_path: Path):
     assert frame["dataset_id"].unique().tolist() == ["physiopain_watch"]
     assert frame["label_family"].unique().tolist() == ["direct_pain"]
     assert frame["sample_offset_s"].tolist() == [0.0, 1.0 / 64.0]
+
+
+def test_pmed_covas_is_scaled_from_0_100_to_0_10(tmp_path: Path):
+    inner_path = tmp_path / "PMED.zip"
+    _write_zip(
+        inner_path,
+        {
+            "PMED/S_01-synchronised-data.csv": (
+                "seconds;covas;bvp;eda_e4\n"
+                "0,000;0;1;0,1\n"
+                "0,004;50;2;0,2\n"
+                "0,008;100;3;0,3\n"
+            )
+        },
+    )
+    with zipfile.ZipFile(tmp_path / "PainMonit Database.zip", "w", compression=zipfile.ZIP_DEFLATED) as outer:
+        outer.write(inner_path, "PMED.zip")
+
+    outputs = normalize_painmonit_pmed(tmp_path, tmp_path / "out", chunksize=10)
+    stream_path = Path(next(item.path for item in outputs if item.output_kind == "measurement_stream"))
+    frame = pd.read_parquet(stream_path)
+
+    assert frame["source_pain_covas_0_100"].tolist() == [0.0, 50.0, 100.0]
+    assert frame["target_pain_nrs_0_10"].tolist() == [0.0, 5.0, 10.0]
+    assert frame["pain_scale_type"].unique().tolist() == ["covas_0_100_scaled_to_nrs_0_10"]
 
 
 def test_silver_normalizer_keeps_watch_context_separate_from_pain_truth(tmp_path: Path):

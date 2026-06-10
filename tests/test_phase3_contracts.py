@@ -50,6 +50,28 @@ def test_build_window_includes_only_samples_up_to_anchor():
     assert first["target_pain_nrs_0_10"] == 4.0
 
 
+def test_window_crossing_large_timestamp_gap_is_rejected():
+    session = pd.DataFrame(
+        {
+            "dataset_id": "painmonit_pmed",
+            "subject_id": "s01",
+            "session_id": "s01_heat",
+            "sample_offset_s": np.r_[np.arange(0, 16, dtype=float), np.arange(80, 96, dtype=float)],
+            "eda": np.arange(32, dtype=float),
+        }
+    )
+
+    windows = build_windows_for_session(
+        session,
+        WindowConfig(target_hz=1.0, window_seconds=10.0, include_partial_windows=True),
+    )
+
+    post_gap = windows.loc[windows["window_end_s"] >= 80.0]
+    assert post_gap["window_end_s"].min() == 88.0
+    assert post_gap["window_max_gap_s"].le(2.0).all()
+    assert windows["window_contiguous"].eq(1).all()
+
+
 def test_missing_sensor_block_does_not_fabricate_values():
     features = sensor_block_features(
         pd.DataFrame({"sample_offset_s": [1.0, 2.0, 3.0]}),

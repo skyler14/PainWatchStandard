@@ -1,7 +1,7 @@
 ---
 type: open_question
 status: active
-updated: 2026-06-08
+updated: 2026-06-09
 tags: [labels, pain-scale]
 ---
 
@@ -26,7 +26,8 @@ silver_pain:
 
 painmonit:
   fields: PMCD pain rates, PMED COVAS
-  issue: clinical vs induced heat should stay separable
+  confirmed: PMED COVAS is 0-100 and must be divided by 10
+  issue: clinical vs induced heat must stay separable
 
 rheumapain:
   fields: rest/exercise workbook pain
@@ -40,3 +41,4 @@ use_as_direct_pain: yes, but preserve dataset/context fields
 collapse_to_universal_truth_without_checks: no
 ```
 
+PMED ingest now preserves raw `source_pain_covas_0_100` and emits corrected `target_pain_nrs_0_10`.

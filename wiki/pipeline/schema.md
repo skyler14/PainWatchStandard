@@ -1,7 +1,7 @@
 ---
 type: pipeline
 status: active
-updated: 2026-06-08
+updated: 2026-06-09
 tags: [schema, fields]
 source_files:
   - src/painwatchstandard/ingest.py
@@ -45,6 +45,8 @@ targets:
   - target_pain_nrs_0_10
   - target_pain_bin
   - pain_intensity
+  - source_pain_covas_0_100
+  - pain_scale_type
   - target_stress_binary
   - target_stress_score_0_10
   - target_stress_score_mean_0_10
@@ -104,6 +106,9 @@ window:
   - window_seconds
   - target_hz
   - source_rows
+  - window_max_gap_s
+  - window_allowed_gap_s
+  - window_contiguous
 
 context:
   - condition
@@ -159,4 +164,3 @@ stress:
   - target_stress_score_0_10
   - target_stress_score_mean_0_10
 ```
-

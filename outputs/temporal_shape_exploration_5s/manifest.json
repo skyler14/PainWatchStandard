@@ -1,0 +1,153 @@
+{
+  "anchor_rows": 3756,
+  "class_counts": [
+    {
+      "dataset_id": "catsa",
+      "rows": 390,
+      "task": "cognitive_load_vs_baseline",
+      "y": 0
+    },
+    {
+      "dataset_id": "catsa",
+      "rows": 400,
+      "task": "cognitive_load_vs_baseline",
+      "y": 1
+    },
+    {
+      "dataset_id": "painmonit",
+      "rows": 64,
+      "task": "pain_high_4_plus",
+      "y": 0
+    },
+    {
+      "dataset_id": "painmonit",
+      "rows": 177,
+      "task": "pain_high_4_plus",
+      "y": 1
+    },
+    {
+      "dataset_id": "painmonit_pmed",
+      "rows": 317,
+      "task": "pain_high_4_plus",
+      "y": 0
+    },
+    {
+      "dataset_id": "painmonit_pmed",
+      "rows": 81,
+      "task": "pain_high_4_plus",
+      "y": 1
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "rows": 210,
+      "task": "pain_high_4_plus",
+      "y": 0
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "rows": 190,
+      "task": "pain_high_4_plus",
+      "y": 1
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 303,
+      "task": "pain_high_4_plus",
+      "y": 0
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 33,
+      "task": "pain_high_4_plus",
+      "y": 1
+    },
+    {
+      "dataset_id": "silver_pain",
+      "rows": 81,
+      "task": "pain_high_4_plus",
+      "y": 0
+    },
+    {
+      "dataset_id": "silver_pain",
+      "rows": 112,
+      "task": "pain_high_4_plus",
+      "y": 1
+    },
+    {
+      "dataset_id": "induced_stress_exercise",
+      "rows": 330,
+      "task": "stress_vs_exercise",
+      "y": 0
+    },
+    {
+      "dataset_id": "induced_stress_exercise",
+      "rows": 180,
+      "task": "stress_vs_exercise",
+      "y": 1
+    },
+    {
+      "dataset_id": "wesad",
+      "rows": 212,
+      "task": "wesad_stress",
+      "y": 0
+    },
+    {
+      "dataset_id": "wesad",
+      "rows": 216,
+      "task": "wesad_stress",
+      "y": 1
+    }
+  ],
+  "config": {
+    "max_sessions_per_dataset": 40,
+    "max_windows_per_session": 10,
+    "random_seed": 20260609,
+    "resample_hz": 4.0,
+    "window_seconds": 5.0
+  },
+  "feature_columns": 1447,
+  "feature_rows": 3296,
+  "pmed_scale_correction": "target_pain_nrs_0_10 divided by 10 because raw COVAS is 0-100",
+  "task_counts": [
+    {
+      "dataset_id": "catsa",
+      "rows": 790,
+      "task": "cognitive_load_vs_baseline"
+    },
+    {
+      "dataset_id": "painmonit",
+      "rows": 241,
+      "task": "pain_high_4_plus"
+    },
+    {
+      "dataset_id": "painmonit_pmed",
+      "rows": 398,
+      "task": "pain_high_4_plus"
+    },
+    {
+      "dataset_id": "physiopain_watch",
+      "rows": 400,
+      "task": "pain_high_4_plus"
+    },
+    {
+      "dataset_id": "rheumapain",
+      "rows": 336,
+      "task": "pain_high_4_plus"
+    },
+    {
+      "dataset_id": "silver_pain",
+      "rows": 193,
+      "task": "pain_high_4_plus"
+    },
+    {
+      "dataset_id": "induced_stress_exercise",
+      "rows": 510,
+      "task": "stress_vs_exercise"
+    },
+    {
+      "dataset_id": "wesad",
+      "rows": 428,
+      "task": "wesad_stress"
+    }
+  ]
+}

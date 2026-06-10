@@ -1,7 +1,7 @@
 ---
 type: pipeline
 status: active
-updated: 2026-06-08
+updated: 2026-06-09
 tags: [windowing, live-inference]
 source_files:
   - src/painwatchstandard/windowing.py
@@ -18,6 +18,7 @@ step_seconds: 1
 window_seconds: 30
 include_partial_windows: false
 min_window_rows: 2
+max_gap_seconds: 2
 ```
 
 Plain meaning:
@@ -74,5 +75,10 @@ session_sort: sample_offset_s ascending
 window_slice: searchsorted over sample_offset_s
 features: sensor_block_features() per sensor block
 target: pain labels aggregated inside trailing window
+continuity:
+  - measure internal and boundary timestamp gaps
+  - reject windows lacking requested history coverage
+  - expose window_max_gap_s as quality metadata
 ```
 
+Temporal exploration recommends parallel 5, 10, and 30 second histories while keeping 1Hz output cadence. See [[model/temporal-shape-results]].

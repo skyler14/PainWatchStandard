@@ -1,0 +1,4 @@
+window_s,task,dataset_id,split,model,feature_set,train_rows,test_rows,feature_count,prevalence,auc,average_precision,brier
+5,pain_high_4_plus,pooled,group_subject_cv,logistic,dataset_only,1568,1568,5,0.3781887755102041,0.745070264193367,0.5866144028115289,0.1997756249730089
+10,pain_high_4_plus,pooled,group_subject_cv,logistic,dataset_only,1784,1784,5,0.4007847533632287,0.7450371891906037,0.6066743090159898,0.1991317182950724
+30,pain_high_4_plus,pooled,group_subject_cv,logistic,dataset_only,1996,1996,5,0.3917835671342685,0.7372196496964232,0.5892412295790281,0.2021698381048966

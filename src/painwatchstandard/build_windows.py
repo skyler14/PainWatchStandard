@@ -188,6 +188,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--window-seconds", type=float, default=30.0)
     parser.add_argument("--include-partial-windows", action="store_true")
     parser.add_argument("--min-window-rows", type=int, default=2)
+    parser.add_argument("--max-gap-seconds", type=float, default=2.0)
     parser.add_argument("--max-sessions-per-stream", type=int, default=None)
     return parser
 
@@ -202,6 +203,7 @@ def main(argv: list[str] | None = None) -> None:
             window_seconds=args.window_seconds,
             include_partial_windows=args.include_partial_windows,
             min_window_rows=args.min_window_rows,
+            max_gap_seconds=args.max_gap_seconds,
         ),
         max_sessions_per_stream=args.max_sessions_per_stream,
     )

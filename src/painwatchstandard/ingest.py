@@ -571,7 +571,10 @@ def normalize_painmonit_pmed(source_root: Path, output_root: Path, chunksize: in
                         rows = len(chunk)
                         sample_index = pd.Series(range(cumulative, cumulative + rows), index=chunk.index, dtype="int64")
                         cumulative += rows
-                        pain = clean_numeric(chunk.get("covas", pd.Series(np.nan, index=chunk.index))).astype("float64")
+                        pain_covas_0_100 = clean_numeric(
+                            chunk.get("covas", pd.Series(np.nan, index=chunk.index))
+                        ).astype("float64")
+                        pain = pain_covas_0_100 / 10.0
                         valid = pain.dropna()
                         if not valid.empty:
                             pain_min = float(valid.min()) if pain_min is None else min(pain_min, float(valid.min()))
@@ -600,8 +603,9 @@ def normalize_painmonit_pmed(source_root: Path, output_root: Path, chunksize: in
                                 "ecg": clean_numeric(chunk.get("ecg", pd.Series(np.nan, index=chunk.index))),
                                 "emg": clean_numeric(chunk.get("emg", pd.Series(np.nan, index=chunk.index))),
                                 "heater_c": clean_numeric(chunk.get("heater_c", pd.Series(np.nan, index=chunk.index))),
+                                "source_pain_covas_0_100": pain_covas_0_100,
                                 "target_pain_nrs_0_10": pain,
-                                "pain_scale_type": "covas_0_10",
+                                "pain_scale_type": "covas_0_100_scaled_to_nrs_0_10",
                             }
                         )
                         stream.write(add_common_labels(out))

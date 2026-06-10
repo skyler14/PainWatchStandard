@@ -1,7 +1,7 @@
 ---
 type: index
 status: active
-updated: 2026-06-08
+updated: 2026-06-09
 ---
 
 # PainWatchStandard Wiki Index
@@ -28,6 +28,8 @@ updated: 2026-06-08
 - [[model/state-normalization]] - softmax state competition and confidence critique.
 - [[model/inference-contract]] - deployment output and missing-sensor handling.
 - [[model/training-rules]] - multi-head training, label gating, leakage controls.
+- [[model/temporal-shape-analysis]] - Python/R methods for waveform shape, dynamics, coupling, and definitive-trend tests.
+- [[model/temporal-shape-results]] - actual 5s/10s/30s experiments, controls, defects, and architecture decision.
 
 ## Decisions
 
@@ -44,4 +46,3 @@ updated: 2026-06-08
 ## Logs
 
 - [[log]] - chronological wiki maintenance log.
-

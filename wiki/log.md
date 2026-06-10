@@ -6,6 +6,46 @@ updated: 2026-06-08
 
 # Wiki Log
 
+## [2026-06-09] analysis | Multiscale Temporal Shape Results
+
+Ran Python and R exploration over 5, 10, and 30 second histories with subject-grouped validation, leave-dataset-out pain tests, time-shuffle controls, quality-only controls, and dataset-only controls.
+
+Confirmed:
+
+- selected within-source temporal shape signal exists
+- pooled pain transfer remains near chance
+- dataset identity alone predicts pooled pain at about AUC 0.74
+- PMED COVAS was mis-scaled from 0-100
+- PMED protocol gaps created false full-window coverage and inflated AUC
+- broad feature banks are highly redundant
+
+Added PMED scale correction, window continuity rejection, reproducible summary outputs, and detailed result page.
+
+Touched pages:
+
+- [[model/temporal-shape-results]]
+- [[model/temporal-shape-analysis]]
+- [[pipeline/windowing]]
+- [[open-questions/label-semantics]]
+
+## [2026-06-09] query | Temporal Shape Analysis
+
+Confirmed current master uses full runs to emit one row per second from trailing 30-second windows. Audited current feature extractor: useful summaries exist, but rich temporal shape is mostly absent.
+
+Added broad Python/R method survey and prioritized experiment plan:
+
+- compact custom dynamics and spectral features
+- sensor-specific EDA/HRV/BVP/ECG/respiration/ACC features
+- cross-sensor lag and coupling
+- catch22, tsfresh, TSFEL, aeon, Kymatio
+- R theft, nonlinearTseries, dtwclust, and functional data analysis
+- shapelets, MiniROCKET, causal TCN, and later self-supervised learning
+- time-shuffle, reverse-time, phase-randomization, presence-only, and dataset-only controls
+
+Touched page:
+
+- [[model/temporal-shape-analysis]]
+
 ## [2026-06-08] ingest | Initial Wiki Build
 
 Created project wiki from current `PainWatchStandard` code, docs, built artifacts, and user corrections.
@@ -39,4 +79,3 @@ Touched pages:
 - [[open-questions/label-semantics]]
 - [[open-questions/activity-head]]
 - [[open-questions/calibration-validation]]
-
