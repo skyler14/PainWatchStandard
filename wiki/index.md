@@ -30,6 +30,7 @@ updated: 2026-06-09
 - [[model/training-rules]] - multi-head training, label gating, leakage controls.
 - [[model/temporal-shape-analysis]] - Python/R methods for waveform shape, dynamics, coupling, and definitive-trend tests.
 - [[model/temporal-shape-results]] - actual 5s/10s/30s experiments, controls, defects, and architecture decision.
+- [[model/functional-pain-v1]] - ternary sympathetic/parasympathetic/homeostasis display method.
 
 ## Decisions
 

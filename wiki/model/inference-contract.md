@@ -1,7 +1,7 @@
 ---
 type: model
 status: active
-updated: 2026-06-08
+updated: 2026-06-10
 tags: [inference, output, confidence]
 source_files:
   - src/painwatchstandard/inference.py
@@ -36,6 +36,26 @@ quality:
   - confidence
 ```
 
+Functional display layer:
+
+```yaml
+functional_pain_v1:
+  type: ternary physiology tracker
+  vertices:
+    - sympathetic
+    - parasympathetic
+    - homeostasis
+  outputs:
+    - ternary_x
+    - ternary_y
+    - functional_pain_0_1
+    - recovery_0_1
+  use: intervention tracking and return-to-baseline visualization
+  not: standalone diagnosis or supervised pain truth
+```
+
+See [[model/functional-pain-v1]].
+
 Confidence must not mean:
 
 ```yaml
@@ -69,4 +89,3 @@ each_tick: current score from trailing physiology window
 current_master_cadence: 1Hz
 future_possible_cadence: 2Hz
 ```
-

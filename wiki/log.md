@@ -6,6 +6,21 @@ updated: 2026-06-08
 
 # Wiki Log
 
+## [2026-06-10] design | Functional Pain V1
+
+Added `functional_pain_v1` as a simple ternary display layer:
+
+- sympathetic activation
+- parasympathetic recovery
+- homeostasis / return to baseline
+
+This is not trained pain truth. It is an interpretable physiology tracker for intervention response and baseline return.
+
+Touched pages:
+
+- [[model/functional-pain-v1]]
+- [[model/inference-contract]]
+
 ## [2026-06-09] analysis | Multiscale Temporal Shape Results
 
 Ran Python and R exploration over 5, 10, and 30 second histories with subject-grouped validation, leave-dataset-out pain tests, time-shuffle controls, quality-only controls, and dataset-only controls.
