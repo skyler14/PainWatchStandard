@@ -1,0 +1,29 @@
+{
+  "inputs": {
+    "5": "/Users/skyler/Downloads/pain datasets/PainWatchStandard/outputs/temporal_shape_exploration_5s/temporal_shape_features.parquet",
+    "10": "/Users/skyler/Downloads/pain datasets/PainWatchStandard/outputs/temporal_shape_exploration_10s/temporal_shape_features.parquet",
+    "30": "/Users/skyler/Downloads/pain datasets/PainWatchStandard/outputs/temporal_shape_exploration/temporal_shape_features.parquet"
+  },
+  "rows": 10580,
+  "feature_sets": {
+    "portable_base_shape": 86,
+    "aggressive_shape": 542,
+    "quality_only": 27,
+    "dataset_only": 2
+  },
+  "targets": [
+    "sympathetic_activation",
+    "parasympathetic_recovery_proxy",
+    "homeostasis"
+  ],
+  "controls": [
+    "activity_control",
+    "dataset_only",
+    "quality_only"
+  ],
+  "export": {
+    "portable_json": "functional_pain_v1_portable_logistic.json",
+    "onnx": "not_available_missing_skl2onnx",
+    "coreml": "not_available_missing_coremltools"
+  }
+}

@@ -6,6 +6,39 @@ updated: 2026-06-08
 
 # Wiki Log
 
+## [2026-06-10] run | Functional Pain V1 Learning Run
+
+Started siloed learning run for Functional Pain V1:
+
+- aggressive 5s/10s/30s temporal feature table
+- weak three-state autonomic labels
+- activity, dataset-only, and quality-only controls
+- portable logistic export path
+- nonlinear learner comparison
+
+Touched pages:
+
+- [[runs/functional-pain-v1-learning-run]]
+- [[lessons]]
+
+## [2026-06-10] run-result | Functional Pain V1 Learning Run
+
+Completed run over 10,580 rows from 5s/10s/30s temporal feature tables.
+
+Main findings:
+
+- PNS/recovery proxy was strongest: portable logistic AUC 0.779, aggressive logistic AUC 0.828.
+- SNS weak label failed controls: quality-only AUC 0.700 and dataset-only AUC 0.693 beat main portable logistic AUC 0.638.
+- Homeostasis was weak: portable logistic AUC 0.677, dataset-only AUC 0.671.
+- Activity control was trivial/protocol-identifiable: dataset-only AUC 1.000.
+- Leave-dataset-out showed PNS proxy had some transfer-like behavior; SNS and homeostasis were unstable.
+- ONNX/CoreML not exported because converters unavailable; portable logistic JSON was exported.
+
+Updated:
+
+- [[runs/functional-pain-v1-learning-run]]
+- [[lessons]]
+
 ## [2026-06-10] research | Autonomic Space Model
 
 Added autonomic-space model page covering:

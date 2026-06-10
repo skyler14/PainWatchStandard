@@ -48,3 +48,8 @@ updated: 2026-06-10
 ## Logs
 
 - [[log]] - chronological wiki maintenance log.
+- [[lessons]] - accumulated modeling lessons and mistakes.
+
+## Runs
+
+- [[runs/functional-pain-v1-learning-run]] - current Functional Pain V1 learner experiment.
