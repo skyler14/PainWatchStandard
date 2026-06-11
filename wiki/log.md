@@ -6,6 +6,18 @@ updated: 2026-06-11
 
 # Wiki Log
 
+## [2026-06-11] run | WESAD PNS Protocol Evaluation
+
+Trained current PNS-proxy learners without WESAD, then tested WESAD meditation
+against TSST stress. All learners were near or below chance (AUC 0.458-0.465);
+5, 10, and 30-second histories all failed. This invalidates treating prior
+PNS-proxy transfer scores as evidence of meditation/PNS recognition.
+
+Touched pages:
+
+- [[runs/wesad-pns-protocol-evaluation]]
+- [[lessons]]
+
 ## [2026-06-11] run | Functional Pain V2 Professional Benchmark
 
 Ran 10,580 rows through five sensor profiles, six literature-inspired feature

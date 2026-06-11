@@ -50,6 +50,10 @@ pns_proxy_circularity:
   lesson: random forest reached 0.849 on a PNS proxy partly derived from related physiological inputs
   rule: call this proxy reconstruction until validated against synchronized respiration/RSA or another independent vagal marker
 
+wesad_pns_protocol_validation:
+  lesson: PNS-proxy learners trained without WESAD scored only 0.458-0.465 AUC on WESAD meditation versus TSST stress
+  rule: current output must not be named parasympathetic activation; retrain against protocol and RSA labels before deployment
+
 professional_method_proxies:
   lesson: broad autonomic-space, WESAD, and pain arms collapsed to the same available feature set, while cvxEDA and RSA could only be approximated
   rule: do not claim reproduction of a literature method unless its defining raw marker and protocol are present

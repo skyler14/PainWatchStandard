@@ -1,0 +1,13 @@
+{
+  "training": "all current weak-label rows except WESAD",
+  "test": "WESAD protocol labels never used for training",
+  "profile": "chest_reference-compatible features available in WESAD",
+  "arm": "autonomic_space",
+  "features": 72,
+  "limitations": [
+    "meditation and baseline are protocol contexts, not direct PNS measurements",
+    "current target construction is a physiology-derived PNS proxy",
+    "sampled temporal-feature anchors are used rather than every WESAD second",
+    "0.5 accuracy uses an uncalibrated threshold"
+  ]
+}
