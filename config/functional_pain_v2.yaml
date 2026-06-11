@@ -1,5 +1,5 @@
-version: 0.1-proposal
-status: review_before_run
+version: 0.2-benchmark
+status: exploratory_run_complete
 
 goal:
   product: mindfulness/rest/walking pain-support state tracker

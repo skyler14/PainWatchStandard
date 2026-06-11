@@ -6,6 +6,19 @@ updated: 2026-06-11
 
 # Wiki Log
 
+## [2026-06-11] run | Functional Pain V2 Professional Benchmark
+
+Ran 10,580 rows through five sensor profiles, six literature-inspired feature
+arms, ten learners, grouped subject validation, controls, and leave-dataset-out
+tests. Random forest was strongest on the PNS proxy (AUC 0.849), but SNS and
+homeostasis failed dataset-identity controls; PNS remains partly circular until
+validated against independent RSA or another vagal marker.
+
+Touched pages:
+
+- [[runs/functional-pain-v2-professional-benchmark]]
+- [[lessons]]
+
 ## [2026-06-11] design | Functional Pain V2 Professional Benchmark
 
 Specified proposed v2 run without starting training:

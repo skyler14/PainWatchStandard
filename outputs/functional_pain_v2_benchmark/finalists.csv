@@ -1,0 +1,10 @@
+stage,target,profile,arm,learner,split,rows,subjects,features,prevalence,auc,average_precision,brier
+literature_arm_screen,homeostasis,native_full,autonomic_space,elastic_net,group_subject_cv,8636,236,72,0.479967577582214,0.6648693983597809,0.6603035583272827,0.2286798646997374
+literature_arm_screen,homeostasis,watch_core,autonomic_space,elastic_net,group_subject_cv,8636,236,72,0.479967577582214,0.6508282615358045,0.6518596680160497,0.23110363657187447
+literature_arm_screen,homeostasis,chest_reference,autonomic_space,elastic_net,group_subject_cv,8636,236,72,0.479967577582214,0.6557239932216665,0.6503055522033593,0.23071894511406582
+literature_arm_screen,parasympathetic_recovery_proxy,native_full,autonomic_space,elastic_net,group_subject_cv,5802,233,72,0.1761461564977594,0.7877305963366603,0.37407468120728693,0.19181012726068578
+literature_arm_screen,parasympathetic_recovery_proxy,watch_core,autonomic_space,elastic_net,group_subject_cv,5802,233,72,0.1761461564977594,0.7243709520261363,0.3325208560926636,0.21035566965753227
+literature_arm_screen,parasympathetic_recovery_proxy,chest_reference,autonomic_space,elastic_net,group_subject_cv,5802,233,72,0.1761461564977594,0.7812476971071571,0.37375314931536713,0.19532204528126232
+literature_arm_screen,sympathetic_activation,native_full,autonomic_space,elastic_net,group_subject_cv,9590,243,72,0.46830031282586027,0.6145910831927306,0.5736668137212283,0.24050671503147267
+literature_arm_screen,sympathetic_activation,watch_core,autonomic_space,elastic_net,group_subject_cv,9590,243,72,0.46830031282586027,0.6027228019482778,0.5718523246005356,0.23988834202237413
+literature_arm_screen,sympathetic_activation,chest_reference,autonomic_space,elastic_net,group_subject_cv,9590,243,72,0.46830031282586027,0.6006606706690931,0.5709193210820745,0.24149954536016108

@@ -1,0 +1,10 @@
+stage,target,profile,arm,learner,split,rows,subjects,features,prevalence,auc,average_precision,brier
+control,sympathetic_activation,dataset_only,dataset_only,elastic_net,group_subject_cv,9590,243,9,0.46830031282586027,0.6992018946699048,0.6841326113095876,0.20630557712204162
+control,sympathetic_activation,quality_only,quality_only,elastic_net,group_subject_cv,9590,243,27,0.46830031282586027,0.6744957523073866,0.6154490287620449,0.22476052704241828
+control,sympathetic_activation,activity_only,activity_only,elastic_net,group_subject_cv,9590,243,20,0.46830031282586027,0.5895073797984935,0.5653608636027218,0.23953036271267544
+control,parasympathetic_recovery_proxy,dataset_only,dataset_only,elastic_net,group_subject_cv,5802,233,9,0.1761461564977594,0.7205135553390267,0.3039712886545738,0.21780094684846713
+control,parasympathetic_recovery_proxy,quality_only,quality_only,elastic_net,group_subject_cv,5802,233,27,0.1761461564977594,0.6606107067117556,0.25247828585800336,0.23337401322209472
+control,parasympathetic_recovery_proxy,activity_only,activity_only,elastic_net,group_subject_cv,5802,233,20,0.1761461564977594,0.713013903331723,0.3202182410163978,0.2146351987009533
+control,homeostasis,dataset_only,dataset_only,elastic_net,group_subject_cv,8636,236,9,0.479967577582214,0.6801795253823557,0.6607848755445456,0.2088625476005509
+control,homeostasis,quality_only,quality_only,elastic_net,group_subject_cv,8636,236,27,0.479967577582214,0.6632702746331693,0.5988595200739087,0.22739824501005956
+control,homeostasis,activity_only,activity_only,elastic_net,group_subject_cv,8636,236,20,0.479967577582214,0.6371052519191982,0.6368919325726332,0.23273160437545695

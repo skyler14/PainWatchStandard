@@ -41,4 +41,20 @@ portable_export:
 data_hydration:
   lesson: filling missing physiological sensors creates fake certainty and device shortcuts
   rule: hydrate by projection, short-gap interpolation, feature derivation, masking, and uncertainty; never invent absent sensor truth
+
+functional_pain_v2:
+  lesson: GAM improved SNS AUC to 0.653, but dataset identity alone reached 0.699 and unseen-dataset median fell to 0.492
+  rule: nonlinear improvement is irrelevant when protocol controls remain stronger
+
+pns_proxy_circularity:
+  lesson: random forest reached 0.849 on a PNS proxy partly derived from related physiological inputs
+  rule: call this proxy reconstruction until validated against synchronized respiration/RSA or another independent vagal marker
+
+professional_method_proxies:
+  lesson: broad autonomic-space, WESAD, and pain arms collapsed to the same available feature set, while cvxEDA and RSA could only be approximated
+  rule: do not claim reproduction of a literature method unless its defining raw marker and protocol are present
+
+homeostasis_labels:
+  lesson: stacked homeostasis AUC 0.672 lost to dataset identity at 0.680 and transferred at median 0.533
+  rule: acquire explicit archetype-specific rest, recovery, posture, and activity labels before further model tuning
 ```

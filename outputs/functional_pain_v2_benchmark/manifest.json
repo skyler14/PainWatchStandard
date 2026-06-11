@@ -1,0 +1,45 @@
+{
+  "rows": 10580,
+  "targets": [
+    "sympathetic_activation",
+    "parasympathetic_recovery_proxy",
+    "homeostasis"
+  ],
+  "profiles_run": [
+    "native_full",
+    "watch_core",
+    "watch_plus_eda",
+    "watch_plus_respiration",
+    "chest_reference"
+  ],
+  "profile_not_run": {
+    "watch_guided_breath": "current feature tables lack guided inhale/exhale phase"
+  },
+  "literature_arms": [
+    "autonomic_space",
+    "stress_ensemble",
+    "wesad_multimodal",
+    "cvxeda_proxy",
+    "hrv_biofeedback",
+    "multimodal_pain"
+  ],
+  "learners": [
+    "elastic_net",
+    "extra_trees",
+    "gam_spline",
+    "gradient_boosting",
+    "lda",
+    "portable_logistic",
+    "random_forest",
+    "rbf_svm",
+    "small_mlp",
+    "stacked_vote"
+  ],
+  "dataset_control": "one-hot dataset identity plus window length",
+  "limitations": [
+    "cvxeda_proxy uses EDA shape features, not raw convex decomposition",
+    "hrv_biofeedback lacks true RSA for most rows",
+    "parasympathetic target is weak and partly physiology-bootstrapped",
+    "60-second history unavailable in prior feature tables"
+  ]
+}

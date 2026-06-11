@@ -1,6 +1,6 @@
 ---
 type: run
-status: proposed
+status: completed
 updated: 2026-06-11
 tags: [functional-pain-v2, hydration, professional-references, benchmark, export]
 source_files:
@@ -11,7 +11,10 @@ source_files:
 
 # Functional Pain V2 Professional Benchmark
 
-No training run has started. This page defines proposed experiment for review.
+Bounded benchmark completed June 11, 2026. It tested 10,580 rows, five
+sensor projections, six literature-inspired feature arms, ten learners, and
+leave-one-dataset-out transfer. Results are exploratory because PNS truth is a
+physiology-derived proxy rather than independently measured RSA or PEP.
 
 ## Product Goal
 
@@ -363,7 +366,62 @@ full_nested_hyperparameter_search: intentionally excluded from first run
 
 First run should use bounded model grids and fixed seeds. Broad exhaustive tuning comes only after integrity controls pass.
 
-## Approval Questions
+## Run Coverage
+
+```yaml
+rows: 10580
+targets:
+  - sympathetic_activation
+  - parasympathetic_recovery_proxy
+  - homeostasis
+sensor_profiles:
+  - native_full
+  - watch_core
+  - watch_plus_eda
+  - watch_plus_respiration
+  - chest_reference
+not_run:
+  watch_guided_breath: no inhale/exhale phase in current feature tables
+  true_rsa: no sufficiently synchronized breath and beat waveform coverage
+  true_pep: no impedance-cardiography PEP
+  true_cvxeda: benchmark has derived EDA shapes, not raw decomposition
+  temporal_filter: ordered session reconstruction was outside this bounded run
+comparisons:
+  literature_arm_screen: 84
+  learner_benchmarks: 90
+  leave_dataset_out: 57
+  controls: 9
+```
+
+## Main Results
+
+| Head | Best model/profile | Grouped AUC | Dataset-only AUC | Leave-dataset median | Interpretation |
+|---|---|---:|---:|---:|---|
+| SNS | GAM spline, watch core | 0.653 | 0.699 | 0.492 | Fails dataset control and transfers poorly; not usable evidence of generalized SNS separation. |
+| PNS proxy | Random forest, chest reference | 0.849 | 0.721 | 0.822 | Strongest result, but partly circular because target was bootstrapped from related HRV/physiology inputs. |
+| Homeostasis | Stacked vote, chest reference | 0.672 | 0.680 | 0.533 | Near controls and unstable across datasets; needs direct rest/recovery/archetype labels. |
+
+Watch-only PNS was weaker: portable logistic reached AUC 0.735, only 0.014
+above dataset identity and 0.022 above activity alone. Chest/native nonlinear
+models gained roughly 0.11 AUC, indicating that richer physiology carries
+recoverable structure, but this run cannot prove that structure is true vagal
+activation.
+
+SNS watch GAM improved substantially over its elastic-net literature screen
+(0.653 versus 0.603), yet still lost to dataset identity (0.699). Its
+leave-dataset AUC ranged from 0.468 to 0.657, with median 0.492. Treat this as
+protocol learning, not a sympathetic score.
+
+## Literature Variations In One Sentence Each
+
+- **Autonomic-space proxy:** independent SNS/PNS feature families gave the strongest broad linear screen (SNS 0.615, PNS 0.788, homeostasis 0.665), but without PEP/RSA they remain correlated watch/chest proxies rather than clean branch isolation.
+- **Phase-two stress ensemble:** classic HR/EDA range, variance, extrema, temperature, activity, and IBI features reached PNS AUC 0.769 but only SNS 0.586, showing better recovery-proxy reconstruction than generalized stress transfer.
+- **WESAD multimodal proxy:** its broad HR/EDA/motion/temperature representation tied the autonomic-space arm because the 72-feature coverage cap selected the same available columns, so this run found no separable WESAD-specific advantage.
+- **cvxEDA proxy:** cheap EDA level/slope/shape features reached PNS AUC 0.748 but SNS 0.516 and homeostasis 0.522; proper tonic/phasic decomposition needs raw EDA and could not be tested here.
+- **HRV-biofeedback proxy:** interval variability and recovery-shape features reached PNS AUC 0.684, weaker than broad multimodal features, because most rows lack breath phase needed to isolate RSA.
+- **Multimodal-pain proxy:** it tied broad autonomic/WESAD arms because no independent pain-residual layer was trained; current evidence supports autonomic context modeling, not direct universal pain inference.
+- **Hydrated watch-core:** realistic HR/IBI, motion, and temperature preserved modest PNS information (best AUC 0.735) but did not isolate SNS from dataset context.
+- **Hydrated EDA/respiration/chest:** richer projections improved nonlinear PNS reconstruction to 0.849, while SNS and homeostasis remained weak, so extra sensors alone do not repair target validity.
 
 Before run:
 
@@ -409,38 +467,32 @@ lessons:
   - generalized changes for lessons.md
 ```
 
-## Statistical Learners In One Sentence Each
+## Learners In One Sentence Each
 
-- **Portable logistic regression:** weighted sensor features produce simple state logits that are transparent, tiny, and easy to reproduce across watch runtimes.
-- **Elastic-net logistic regression:** logistic regression with L1/L2 penalties removes redundant features while keeping correlated physiological groups stable.
-- **Generalized additive model:** learns smooth nonlinear response curves for each marker while remaining understandable as separate physiological effects.
-- **Linear discriminant analysis:** finds inexpensive linear state boundaries by modeling class means and shared covariance.
-- **RBF SVM:** separates states using curved similarity boundaries and can work well on small nonlinear physiological datasets, but scales poorly and is harder to explain.
-- **Random forest:** averages many bootstrapped decision trees to model nonlinear thresholds and interactions with reasonable robustness.
-- **Extra Trees:** uses highly randomized trees to expose feature interactions quickly and provide a strong discovery benchmark.
-- **Gradient boosting:** builds trees sequentially to correct prior errors, usually giving strong tabular accuracy at cost of calibration and export complexity.
-- **Small MLP:** combines multimodal features through compact neural layers that can export well but require stronger regularization and validation.
-- **Stacked ensemble:** learns how to blend linear, tree, and neural probabilities so different error patterns can complement each other.
-- **Hidden Markov/state filter:** applies physiological transition constraints after per-window scoring so displayed states do not jump unrealistically each second.
+- **Portable logistic regression:** best watch PNS result was 0.735 and it remains the easiest deployment baseline, but its small edge over controls is not enough for a validated PNS claim.
+- **Elastic-net logistic regression:** useful for literature-arm screening and redundant features, but nonlinear learners beat it by about 0.06 AUC on the PNS proxy.
+- **GAM spline:** best SNS learner at 0.653 by fitting smooth nonlinear marker effects, yet failed dataset-only control and leave-dataset transfer.
+- **Linear discriminant analysis:** cheap covariance-based baseline produced no winning head and is retained mainly as a linear sanity check.
+- **RBF SVM:** nonlinear kernel boundaries produced no exceptional result here and add deployment/calibration cost without measured benefit.
+- **Random forest:** best overall PNS-proxy result at 0.849 and best Brier score at 0.125, but likely learned nonlinear pieces of the proxy-label recipe.
+- **Extra Trees:** useful interaction probe, but did not beat random forest/boosting for PNS or GAM for SNS.
+- **Gradient boosting:** nearly tied random forest on PNS (0.847 chest, 0.844 native), confirming nonlinear multimodal structure while sharing the same circular-label warning.
+- **Small MLP:** competitive for SNS at 0.650 but failed controls, so added neural complexity did not produce trustworthy branch separation.
+- **Stacked vote:** best homeostasis AUC at 0.672 and good SNS calibration, but neither head beat dataset identity.
+- **Temporal state filter:** not tested in this run; it may stabilize display output, but cannot create physiological validity missing from window scores.
 
-## Current Recommendation Before Run
+## Decision
 
-Run v2 only after review. Proposed likely watch candidate:
+Do not ship current SNS or homeostasis heads as physiological measurements.
+Keep portable watch PNS as an experimental trend score and nonlinear
+chest/native models as discovery tools only.
 
 ```yaml
-features:
-  - watch-core compact features
-  - guided-breath features when session supplies phase
-  - optional EDA/respiration modules
-
-model:
-  - elastic-net or portable logistic per state
-  - calibrated ternary output
-  - activity and quality gates
-  - deterministic temporal filter
-
-discovery:
-  - Extra Trees
-  - gradient boosting
-  - professional-reference feature arms
+next_validation:
+  - collect paced-breath phase plus beat timestamps for RSA
+  - collect independent rest/recovery labels
+  - preserve raw EDA for tonic/phasic decomposition
+  - evaluate within-dataset subject holdout and unseen-device holdout separately
+  - require each head to beat dataset, quality, activity, reversed-time, and shuffled-time controls
+  - calibrate outputs only after target validity passes
 ```

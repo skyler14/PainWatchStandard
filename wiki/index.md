@@ -53,4 +53,4 @@ updated: 2026-06-11
 ## Runs
 
 - [[runs/functional-pain-v1-learning-run]] - current Functional Pain V1 learner experiment.
-- [[runs/functional-pain-v2-professional-benchmark]] - proposed hydrated-device professional-method benchmark; awaiting review.
+- [[runs/functional-pain-v2-professional-benchmark]] - completed hydrated-device benchmark of six literature-inspired arms, ten learners, controls, and dataset transfer.
