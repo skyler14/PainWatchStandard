@@ -1,0 +1,226 @@
+version: 0.1-proposal
+status: review_before_run
+
+goal:
+  product: mindfulness/rest/walking pain-support state tracker
+  internal_space: [sympathetic, parasympathetic, homeostasis]
+  output:
+    - ternary_state
+    - 2d_watch_projection
+    - activity_context
+    - quality
+    - optional_pain_residual
+
+hydration:
+  definition: project each source into realistic device profiles without fabricating absent physiology
+  cadence_hz: 1
+  histories_s: [5, 10, 30, 60]
+  rules:
+    - preserve_native_values
+    - interpolate_only_short_gaps_within_sensor_tolerance
+    - never_synthesize_eda_from_hr
+    - never_synthesize_respiration_from_rate_only
+    - retain_missingness_masks_for_gating_only
+    - attach_uncertainty_to_proxy_features
+    - fit_standardization_inside_training_fold
+
+  variants:
+    native_full:
+      sensors: all_available
+      purpose: upper_bound_and_feature_discovery
+
+    watch_core:
+      sensors: [hr, ibi_or_heartbeat_series, acc, temperature]
+      optional: [spo2, respiratory_rate]
+      excludes: [eda, respiration_waveform, ecg, emg, grip]
+      purpose: apple_watch_like_deployment
+
+    watch_guided_breath:
+      sensors: [hr, ibi_or_heartbeat_series, acc, temperature, guided_breath_phase]
+      purpose: paced_breath_pns_response_proxy
+
+    watch_plus_eda:
+      sensors: [hr, ibi, acc, temperature, eda]
+      purpose: apple_watch_plus_accessory_or_e4
+
+    watch_plus_respiration:
+      sensors: [hr, ibi, acc, temperature, respiration]
+      purpose: rsa_proxy_without_icg
+
+    chest_reference:
+      sensors: [ecg, respiration, eda, acc, temperature]
+      optional: [emg, impedance_cardiography]
+      purpose: lab_reference_and_rsa_validation
+
+feature_groups:
+  common:
+    - robust_level
+    - mad_iqr_quantiles
+    - slope_and_late_minus_early
+    - autocorrelation
+    - selected_spectral_entropy_and_band_power
+    - activity_and_motion_quality
+    - archetype_robust_z
+
+  pns:
+    - rmssd_with_quality_gate
+    - sdnn_with_duration_gate
+    - ibi_distribution
+    - heart_rate_recovery_slope
+    - rsa_peak_valley_when_respiration_available
+    - respiration_heart_coherence_when_available
+    - paced_breath_response_when_guided_phase_available
+
+  sns:
+    - eda_tonic_level_when_available
+    - eda_phasic_peak_rate_when_available
+    - eda_reactivity_and_recovery
+    - heart_rate_and_bvp_reactivity
+    - skin_temperature_drop
+    - pep_or_lvet_when_lab_hardware_available
+
+  homeostasis:
+    - archetype_distance
+    - low_motion_stability
+    - heart_rate_stability
+    - eda_stability_when_available
+    - return_to_baseline_slope
+    - sustained_state_duration
+
+professional_reference_arms:
+  autonomic_space:
+    source_idea: Berntson_Cacioppo_Quigley
+    implementation:
+      - independent_sns_and_pns_heads
+      - cab_proxy
+      - car_proxy
+      - reciprocal_coactivation_coinhibition_modes
+
+  stress_ensemble:
+    source_idea: Vos_Trinh_Sarnyai_Rahimi_Azghadi
+    implementation:
+      - rolling_hr_eda_statistics
+      - balanced_state_blocks
+      - tree_plus_mlp_or_logistic_stack
+      - source_transfer_validation
+
+  wesad_multimodal:
+    source_idea: WESAD
+    implementation:
+      - multimodal_sensor_fusion
+      - stress_baseline_meditation_recovery_states
+      - activity_and_chest_reference_comparison
+
+  cvxeda_sns:
+    source_idea: Greco_Valenza_Scilingo
+    implementation:
+      - tonic_phasic_eda_decomposition
+      - scr_count_amplitude_area_rise_recovery
+      - compare_against_simple_eda_features
+
+  hrv_biofeedback:
+    source_idea: Lehrer_Gevirtz
+    implementation:
+      - rmssd_hf_hrv_rsa
+      - breath_heart_coherence
+      - paced_breath_reactivity
+      - pns_recovery_head
+
+  multimodal_pain:
+    source_idea: BioVid_PainMonit_Werner_style
+    implementation:
+      - direct_pain_residual_head
+      - sns_pns_activity_as_context
+      - source_and_subject_holdouts
+
+learners:
+  portable_logistic:
+    use: watch_baseline_and_export_reference
+    export: [portable_json, onnx, coreml]
+
+  elastic_net_logistic:
+    use: sparse_feature_selection_and_interpretability
+    export: [portable_json, onnx, coreml]
+
+  generalized_additive_model:
+    use: nonlinear_but_interpretable_physiology_curves
+    export: [portable_piecewise_or_lookup, onnx_if_supported]
+
+  linear_discriminant_analysis:
+    use: low_compute_state_separation_baseline
+    export: [portable_json, onnx, coreml]
+
+  rbf_svm:
+    use: nonlinear_small_dataset_benchmark
+    export: [onnx, coreml_if_converter_supported]
+
+  random_forest:
+    use: robust_nonlinear_baseline_and_feature_importance
+    export: [onnx, coreml_if_converter_supported]
+
+  extra_trees:
+    use: feature_discovery_and_interaction_probe
+    export: [onnx, coreml_if_converter_supported]
+
+  gradient_boosting:
+    use: strong_tabular_benchmark
+    export: [onnx, coreml_if_converter_supported]
+
+  small_mlp:
+    use: smooth_multimodal_feature_interactions
+    export: [onnx, coreml]
+
+  stacked_ensemble:
+    use: compare_professional_stress_ensemble_idea
+    export: [onnx_or_separate_component_models]
+
+  temporal_state_filter:
+    implementation: hidden_markov_or_exponential_state_filter
+    use: stabilize_state_transitions_after_per_window_model
+    export: deterministic_runtime_logic
+
+validation:
+  splits:
+    - group_subject_cv
+    - leave_dataset_out
+    - leave_device_profile_out
+    - leave_label_regime_out
+    - walking_and_light_activity_holdout
+  controls:
+    - dataset_only
+    - quality_only
+    - sensor_presence_only
+    - activity_only
+    - shuffled_time
+    - reversed_time
+  metrics:
+    - roc_auc
+    - average_precision
+    - brier
+    - calibration_error
+    - ternary_state_stability
+    - time_to_recovery
+    - false_arousal_during_walking
+
+export_parity:
+  required_formats: [python_reference, portable_json, onnx, coreml]
+  test:
+    - same_holdout_rows
+    - compare_raw_logits
+    - compare_probabilities
+    - compare_ternary_coordinates
+  tolerances:
+    max_absolute_probability_error: 0.0001
+    max_absolute_ternary_coordinate_error: 0.0001
+    classification_agreement: 0.9999
+  failure_rule: reject_export_if_tolerance_exceeded
+
+approval_gate:
+  run_only_after_review: true
+  expected_first_run:
+    - hydrate_all_variants
+    - train_professional_reference_arms
+    - benchmark_learners
+    - select_portable_candidate
+    - export_and_parity_test
+    - summarize_in_run_wiki

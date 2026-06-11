@@ -1,7 +1,7 @@
 ---
 type: index
 status: active
-updated: 2026-06-10
+updated: 2026-06-11
 ---
 
 # PainWatchStandard Wiki Index
@@ -53,3 +53,4 @@ updated: 2026-06-10
 ## Runs
 
 - [[runs/functional-pain-v1-learning-run]] - current Functional Pain V1 learner experiment.
+- [[runs/functional-pain-v2-professional-benchmark]] - proposed hydrated-device professional-method benchmark; awaiting review.

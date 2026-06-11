@@ -1,10 +1,26 @@
 ---
 type: log
 status: active
-updated: 2026-06-08
+updated: 2026-06-11
 ---
 
 # Wiki Log
+
+## [2026-06-11] design | Functional Pain V2 Professional Benchmark
+
+Specified proposed v2 run without starting training:
+
+- realistic watch/device hydration variants
+- autonomic-space, phase-two stress, WESAD, cvxEDA, HRV-biofeedback, and multimodal-pain method arms
+- unified learner benchmark
+- source/device/activity holdouts
+- portable JSON, ONNX, and CoreML parity requirements
+- one-sentence learner explanations
+
+Touched pages:
+
+- [[runs/functional-pain-v2-professional-benchmark]]
+- [[lessons]]
 
 ## [2026-06-10] run | Functional Pain V1 Learning Run
 

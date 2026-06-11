@@ -1,7 +1,7 @@
 ---
 type: lessons
 status: active
-updated: 2026-06-10
+updated: 2026-06-11
 tags: [lessons, mistakes, modeling]
 ---
 
@@ -37,4 +37,8 @@ activity_context:
 portable_export:
   lesson: logistic JSON gives exact, small, watch-friendly baseline
   rule: use tree/boosting models for discovery unless ONNX/CoreML parity is verified
+
+data_hydration:
+  lesson: filling missing physiological sensors creates fake certainty and device shortcuts
+  rule: hydrate by projection, short-gap interpolation, feature derivation, masking, and uncertainty; never invent absent sensor truth
 ```
